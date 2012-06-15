@@ -2,7 +2,6 @@ package mdfs.client.parser;
 
 import mdfs.utils.Config;
 import mdfs.utils.Time;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 /**
@@ -70,7 +69,7 @@ public class JSONHeaderCreator {
 			metaData.put("group", group);
 			metaData.put("created", created);
 			metaData.put("lastEdited", lastEdited);
-			
+
 			json.put("Meta-data", metaData);
 			
 			return json.toString();
