@@ -1,0 +1,12 @@
+mdfs.client.api
+mdfs.client.parser
+mdfs.datanode.io
+mdfs.datanode.parser
+mdfs.namenode.io
+mdfs.namenode.parser
+mdfs.namenode.repositories
+mdfs.namenode.sql
+mdfs.utils
+mdfs.utils.io
+mdfs.utils.parser
+org.json

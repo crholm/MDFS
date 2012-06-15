@@ -1,0 +1,51 @@
+/ = xor
+[] = optional
+
+
+
+124151 (antal bytes headern består av)
+{
+"From": "test.island.liu.se",
+"To": "lucy.island.liu.se",
+"Stage": "Request" / "Response" / "Info",
+"Type": "File" / "Meta-Data" / "Info",
+"Mode": "Write" / "Read" / "Remove" / "Edit" / "Info" / "Cascade" ,
+
+"Error": "Error message",
+
+
+
+"User": "raz",
+"Pass": "qwerty",
+
+"Meta-data":{
+							"path": "/raz/data/info.txt",
+							"type": "dir" / "file"
+							"size": 2024,
+							"zzpermission": 764,
+							"owner": "raz",
+							"group": "raz",
+							"created": "2011-09-10 13:27:02",
+							"lastEdited": "2011-09-11 11:09:00",
+							"lastToutched": "2011-09-13 16:17:34",
+							"Location":{
+													"ratio": 2,   (whanted replication ratio)
+													"name": "1184614648.v3247",
+													"hosts": ["datanod1.island.liu.se:13210", "datanod2.island.liu.se:13210"],
+												 }
+							"Children": [{path: "..."}, {path: "..."}]
+						},
+
+
+
+"Info": {
+					"removed": "successful",
+					"written": "successful",
+					"id": 351
+					"cookie": 124151313661351313251
+					"datanodes" : ["datanod1.island.liu.se:13210", "datanod2.island.liu.se:13210"]
+				},
+
+}
+[File:]
+
