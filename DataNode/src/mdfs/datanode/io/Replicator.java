@@ -1,20 +1,19 @@
 package mdfs.datanode.io;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.Socket;
-
-
-
-
 import mdfs.utils.Config;
 import mdfs.utils.io.SocketFactory;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolLocation;
+import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 import mdfs.utils.parser.FileNameOperations;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.File;
+import java.io.IOException;
+import java.net.Socket;
 
 
 /**
@@ -25,8 +24,8 @@ import org.json.JSONObject;
 // TODO implement intelligent way of replicating to load balance
 
 public class Replicator implements Runnable{
-	JSONArray hosts = new JSONArray();
-	String metadata;
+	String hosts[];
+	MDFSProtocolMetaData metadata;
 	String filePath;
 	
 	/**
@@ -34,34 +33,36 @@ public class Replicator implements Runnable{
 	 * I starts a thread that handels the replication itself.
 	 * @param metadata the JSON metadata that represents the file to be replicated
 	 */
-	public void overwriteFile(JSONObject metadata){
+	public void overwriteFile(MDFSProtocolMetaData metadata){
 		//Sets the metadata of the file to be replicated
-		this.metadata = metadata.toString();
-		
-		try {
-			//Get the location of which the old version of the file is stored
-			JSONObject location = metadata.getJSONObject("Location");
-			
-			//Retrieves the full path on the local FS of the file to be replicated
-			filePath = new FileNameOperations().translateFileNameToFullPath(location.getString("name"));
-			
-			//An array containing all hosts the file
-			JSONArray hosted = location.getJSONArray("hosts");
-			
-			//Creates a reference string to exclude the current data node
-			String thisHost = Config.getString("address") + ":" + Config.getString("port");
-			
-			//Adds all other hosts to the array of which to replicate the file to
-			for(int i = 0; i < hosted.length(); i++){
-				if(!thisHost.equals( hosted.getString(i) )){
-					hosts.put(hosted.getString(i));
-				}
-			}
-			
-			new Thread(this).start();
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
+		this.metadata = metadata;
+
+        //Get the location of which the old version of the file is stored
+        MDFSProtocolLocation location = metadata.getLocation();
+
+        //Retrieves the full path on the local FS of the file to be replicated
+        filePath = new FileNameOperations().translateFileNameToFullPath(location.getName());
+
+        //An array containing all hosts the file
+        int size = location.getHostsSize();
+        String hosted[] = new String[size];
+        hosted = location.getHostsArray(hosted);
+
+        //Creates a reference string to exclude the current data node
+        String thisHost = Config.getString("address") + ":" + Config.getString("port");
+
+        //Adds all other hosts to the array of which to replicate the file to
+        hosts = new String[size-1];
+        int j = 0;
+        for(int i = 0; i < hosted.length; i++){
+            if(!thisHost.equals(hosted[i])){
+                hosts[j] = hosted[i];
+                j++;
+            }
+        }
+
+        new Thread(this).start();
+
 	}
 	
 	
@@ -70,19 +71,18 @@ public class Replicator implements Runnable{
 	 * I starts a thread that handles the replication itself.
 	 * @param metadata the JSON metadata that represents the file to be replicated
 	 */
-	public void newFile(JSONObject metadata){
+	public void newFile(MDFSProtocolMetaData metadata){
 
-		this.metadata = metadata.toString();
-		
-		try {
+		this.metadata = metadata;
+
 			//Get the location of which the old version of the file is stored
-			JSONObject location = metadata.getJSONObject("Location");
+			MDFSProtocolLocation location = metadata.getLocation();
 			
 			//Retrieves the full path on the local FS of the file to be replicated
-			filePath = new FileNameOperations().translateFileNameToFullPath(location.getString("name"));
+			filePath = new FileNameOperations().translateFileNameToFullPath(location.getName());
 			
 			//Retrieves the ratio or rather to how many data nodes the file are to be replicated if possible
-			int ratio = location.getInt("ratio");			
+			int ratio = location.getRatio();
 			
 			//Creates a reference string to exclude the current data node
 			String thisHost = Config.getString("address") + ":" + Config.getString("port");
@@ -97,17 +97,10 @@ public class Replicator implements Runnable{
 				dataNodes[i] = dataNodesAddress[i] + ":" + dataNodesPort[i];
 			}
 			
-			//Adds the data node to the array of which the file are to be replicated to
-			for(int i = 0; i<ratio && i < dataNodes.length; i++){
-				if(!thisHost.equals(dataNodes[i]))
-					this.hosts.put(dataNodes[i]);
-			}
+			hosts = dataNodes;
 			
 			
 			new Thread(this).start();
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
 		
 	}
 	
@@ -118,36 +111,34 @@ public class Replicator implements Runnable{
 	 */
 	@Override
 	public void run() {
-		try {
-			JSONObject metadata = new JSONObject(this.metadata);
-			JSONObject json = new JSONObject();
-			
+            MDFSProtocolHeader header = new MDFSProtocolHeader();
+
 			SocketFactory socketFactory = new SocketFactory();
 			SocketFunctions socketFunctions = new SocketFunctions();
 			Socket socket;
 			File file;
 			
 			//Creates the message to the other data nodes
-			json.put("From", Config.getString("address"));
-			json.put("Stage", "Request");
-			json.put("Type", "File");
-			json.put("Mode", "Cascade");
-			json.put("Meta-data", metadata);
-			
+
+			header.setStage(Stage.REQUEST);
+            header.setType(Type.FILE);
+            header.setMode(Mode.CASCADE);
+            header.setMetadata(metadata);
+
 			//Loops through and send the file to each data node the file is to be replicated to
-			for(int i = 0; i < hosts.length(); i++){
+			for(int i = 0; i < hosts.length; i++){
 				//Splitt the address into host[0] = address, host[1] = port
-				String[] host = hosts.getString(i).split(":");
-				json.put("To", host[0]);
-				
+				String[] host = hosts[i].split(":");
+
 				//Creates a file for the file to be sent.
 				file = new File(filePath);
+
 				//Creates a socket to the data node
 				socket = socketFactory.createSocket(host[0], Integer.parseInt(host[1]));
 				
 				//Checks that a socket to the data node was created.
 				if(socket != null){
-					socketFunctions.sendText(socket, json.toString());
+					socketFunctions.sendText(socket, header.toString());
 					socketFunctions.sendFile(socket, file);
 					try {
 						socket.close();
@@ -156,15 +147,7 @@ public class Replicator implements Runnable{
 					}
 				}				
 			}
-			
-			
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		
-		
-		
+
 	}
 	
 	

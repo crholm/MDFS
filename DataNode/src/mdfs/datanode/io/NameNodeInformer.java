@@ -1,15 +1,17 @@
 package mdfs.datanode.io;
 
-import java.io.IOException;
-import java.net.Socket;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFactory;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolInfo;
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
+
+import java.io.IOException;
+import java.net.Socket;
 
 /**
  * This class informs the NameNode of changes to the local file system in regard to the MDFS file system.
@@ -18,9 +20,9 @@ import mdfs.utils.io.SocketFunctions;
  *
  */
 public class NameNodeInformer implements Runnable{
-	private String type;
-	private String mode;
-	private JSONObject info;
+	private Type type;
+	private Mode mode;
+	private MDFSProtocolInfo info;
 	private SocketFunctions socketFunctions = new SocketFunctions();
 	private SocketFactory socketFactory = new SocketFactory();
 	
@@ -31,7 +33,7 @@ public class NameNodeInformer implements Runnable{
 	 * @param mode the Mode in which the changes were made
 	 * @param info JSONObeject that represents what the NameNode needs to know in regard to the changes made
 	 */
-	public void newDataLocation(String type, String mode, JSONObject info){
+	public void newDataLocation(Type type,  Mode mode, MDFSProtocolInfo info){
 		//Supplies information to the NameNode Informer and starts it
 		this.type = type;
 		this.mode = mode;
@@ -44,33 +46,29 @@ public class NameNodeInformer implements Runnable{
 	public void run() {
 		
 		
-		JSONObject json = new JSONObject();
-		try {
-			//Builds a message to the name node
-			json.put("From", Config.getString("address"));
-			json.put("To", Config.getString("NameNode.address"));
-			json.put("Stage", "Info");
-			json.put("Type", type);
-			json.put("Mode", mode);
-			json.put("Info", info);
-			
-			try {
-				//Creates a socket to the name node
-				Socket socket = socketFactory.createSocket(Config.getString("NameNode.address"), Config.getInt("NameNode.port"));
-				
-				Verbose.print("Informing Namenode of data location: " + json.toString(), this, Config.getInt("verbose")-2);
-				
-				//Sening information to the name node
-				socketFunctions.sendText(socket, json.toString());
-				
-				socket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}	
+		MDFSProtocolHeader header = new MDFSProtocolHeader();
+
+        //Builds a message to the name node
+
+        header.setStage(Stage.INFO);
+        header.setType(type);
+        header.setMode(mode);
+        header.setInfo(info);
+
+        try {
+            //Creates a socket to the name node
+            Socket socket = socketFactory.createSocket(Config.getString("NameNode.address"), Config.getInt("NameNode.port"));
+
+            Verbose.print("Informing Namenode of data location: " + header.toString(), this, Config.getInt("verbose")-2);
+
+            //Sening information to the name node
+            socketFunctions.sendText(socket, header.toString());
+
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 		
 		
 	}
