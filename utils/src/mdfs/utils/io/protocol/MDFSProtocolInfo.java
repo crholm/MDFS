@@ -1,6 +1,6 @@
 package mdfs.utils.io.protocol;
 
-import mdfs.utils.io.protocol.enums.ActionStatus;
+import mdfs.utils.io.protocol.enums.EventStatus;
 import mdfs.utils.io.protocol.enums.Overwrite;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,8 +16,8 @@ import java.util.LinkedList;
  * @version 1.0
  */
 public class MDFSProtocolInfo extends MDFSProtocol {
-    private ActionStatus removed;
-    private ActionStatus written;
+    private EventStatus removed;
+    private EventStatus written;
     private Overwrite overwrite;
     private int id = -1;
     private String cookie;
@@ -155,32 +155,32 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         }
     }
 
-    public ActionStatus getRemoved() {
+    public EventStatus getRemoved() {
         return removed;
     }
 
-    public void setRemoved(ActionStatus removed) {
+    public void setRemoved(EventStatus removed) {
         this.removed = removed;
     }
 
     public void setRemoved(String removed) {
         try{
-            this.removed = ActionStatus.valueOf(removed.toUpperCase().trim());
+            this.removed = EventStatus.valueOf(removed.toUpperCase().trim());
         }catch (Exception e){
             this.removed = null;
         }
     }
 
-    public ActionStatus getWritten() {
+    public EventStatus getWritten() {
         return written;
     }
 
-    public void setWritten(ActionStatus written) {
+    public void setWritten(EventStatus written) {
         this.written = written;
     }
     public void setWritten(String written) {
         try{
-            this.written = ActionStatus.valueOf(written.toUpperCase().trim());
+            this.written = EventStatus.valueOf(written.toUpperCase().trim());
         }catch (Exception e){
             this.written = null;
         }

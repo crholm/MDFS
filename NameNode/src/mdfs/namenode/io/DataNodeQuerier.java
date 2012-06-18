@@ -1,16 +1,16 @@
 package mdfs.namenode.io;
 
-import java.io.IOException;
-import java.net.Socket;
-
 import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
-import mdfs.utils.Config;
 import mdfs.utils.io.SocketFactory;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.io.IOException;
+import java.net.Socket;
 /**
  * This object quries diffrent datanodes. It provides a way for the name node to tell the datanodes what to do.
  * @author Rasmus Holm
@@ -19,7 +19,7 @@ import org.json.JSONObject;
 public class DataNodeQuerier implements Runnable{
 	private SocketFactory socketFactory = new SocketFactory();
 	private SocketFunctions socketFunctions = new SocketFunctions();
-	private JSONObject query = null;
+	private MDFSProtocolHeader query;
 	private DataNodeInfoRepositoryNode[] dataNodes = null; 
 	
 	/**
@@ -31,19 +31,19 @@ public class DataNodeQuerier implements Runnable{
 		dataNodes = node.getLocations();
 		
 		//Builds the query that is sent to eatch datanode
-		query = new JSONObject();
-		try {
-			query.put("From", Config.getString("address"));
+		query = new MDFSProtocolHeader();
+
+        query.setStage(Stage.REQUEST);
+        query.setType(Type.FILE);
+        query.setMode(Mode.REMOVE);
+
+        //TODO implemnt MetaDataRepositoryNode as extening MDFSProtocolMetadata
+        //query.put("Meta-data", node.toJSON());
+        query.setMetadata(node);
+
+
 			
-			query.put("Stage", "Request");
-			query.put("Type", "File");
-			query.put("Mode", "Remove");
-			
-			query.put("Meta-data", node.toJSON());
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
+
 		
 		//Starts the thread that will send the query
 		new Thread(this).start();
@@ -57,30 +57,20 @@ public class DataNodeQuerier implements Runnable{
 		Socket dataNodeSocket;
 		//Loops all the nodes
 		for (DataNodeInfoRepositoryNode node : dataNodes) {
-			try {
-				
-				query.put("To", node.getAddress());
-				
-				//Creates a socket to one datanode
-				dataNodeSocket = socketFactory.createSocket(node.getAddress(), Integer.parseInt(node.getPort())); 
-				if(dataNodeSocket != null){
-					//Sends query
-					socketFunctions.sendText(dataNodeSocket, query.toString());
-					try {
-						dataNodeSocket.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					
-				}
-				
-				
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			
-			
-			
+
+            //Creates a socket to one datanode
+            dataNodeSocket = socketFactory.createSocket(node.getAddress(), Integer.parseInt(node.getPort()));
+            if(dataNodeSocket != null){
+                //Sends query
+                socketFunctions.sendText(dataNodeSocket, query.toString());
+                try {
+                    dataNodeSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
 		}
 	}
 }

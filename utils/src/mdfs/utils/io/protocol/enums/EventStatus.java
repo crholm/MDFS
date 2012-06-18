@@ -7,6 +7,6 @@ package mdfs.utils.io.protocol.enums;
  * @author Rasmus Holm
  * @version 1.0
  */
-public enum ActionStatus {
+public enum EventStatus {
     SUCCESSFUL,FAILED;
 }

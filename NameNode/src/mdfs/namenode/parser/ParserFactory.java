@@ -1,5 +1,8 @@
 package mdfs.namenode.parser;
 
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 import mdfs.utils.parser.Parser;
 
 /**
@@ -15,18 +18,18 @@ public class ParserFactory {
 	 * @param mode can be "Write",  "Read",  "Remove" or "Info"
 	 * @return a Parser that handles specified parameters or null if unavailable 
 	 */
-	public Parser getParser(String stage, String type, String mode){
+	public Parser getParser(Stage stage, Type type, Mode mode){
 		
 		//Returns a parser for Stage = Request
-		if(stage.equals("Request")){
+		if(stage == Stage.REQUEST){
 			//Returns a parser for Type = Meta-data
-			if(type.equals("Meta-data")){
+			if(type == Type.METADATA){
 				return new ParserRequestMetaData(mode);
 			}
 		//Returns a parser for Stage = Info
-		}else if(stage.equals("Info")){
+		}else if(stage == Stage.INFO){
 			//Returns a parser for Type = File 
-			if(type.equals("File")){
+			if(type == Type.FILE){
 				return new ParserInfoFile(mode);
 			}
 		}

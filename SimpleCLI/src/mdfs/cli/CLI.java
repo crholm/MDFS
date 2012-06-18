@@ -1,14 +1,12 @@
 package mdfs.cli;
 
+import mdfs.client.api.FileQuery;
+import mdfs.client.api.FileQueryImpl;
+import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import mdfs.client.api.FileQuery;
-import mdfs.client.api.FileQueryImpl;
 
 public class CLI {
 	public CLI(){
@@ -29,7 +27,7 @@ public class CLI {
 			
 			if(command.startsWith("ls")){
 				command = command.replaceFirst("ls", "").trim();
-				JSONObject[] files;
+				MDFSProtocolMetaData[] files;
 				timerStart();
 				if(command.length()<1)
 					files = fq.ls(null);
@@ -39,16 +37,14 @@ public class CLI {
 				timerStop();
 				
 				
-				for (JSONObject file : files) {
-					try {
-						System.out.print (file.getInt("permission") + "   ");
-						System.out.print(file.getString("owner") + "  " + file.getString("group") + "\t");	
-						System.out.print(file.getString("type") + "\t");
-						System.out.print(file.getLong("size") + "\t");
-						System.out.println(file.getString("path"));
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
+				for (MDFSProtocolMetaData file : files) {
+
+                    System.out.print (file.getPermission() + "   ");
+                    System.out.print(file.getOwner() + "  " + file.getGroup() + "\t");
+                    System.out.print(file.getType() + "\t");
+                    System.out.print(file.getSize() + "\t");
+                    System.out.println(file.getPath());
+
 				}
 				timerPrint();
 				

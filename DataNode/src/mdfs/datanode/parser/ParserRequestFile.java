@@ -109,7 +109,7 @@ public class ParserRequestFile implements Parser{
 
         //Creates information about the file and updates the Name Node with it
         MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setWritten(ActionStatus.SUCCESSFUL);
+        info.setWritten(EventStatus.SUCCESSFUL);
         info.setOverwrite(overwrite ? Overwrite.TRUE : Overwrite.FALSE);
         info.setPath(metadata.getPath());
         info.setName(fileName);
@@ -225,7 +225,7 @@ public class ParserRequestFile implements Parser{
 
         //Creates info about the file that was just written
         MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setWritten(ActionStatus.SUCCESSFUL);
+        info.setWritten(EventStatus.SUCCESSFUL);
         info.setOverwrite( overwrite ? Overwrite.TRUE : Overwrite.FALSE);
 
         info.setPath(metadata.getPath());

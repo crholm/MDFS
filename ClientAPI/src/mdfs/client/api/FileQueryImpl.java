@@ -255,7 +255,7 @@ public class FileQueryImpl implements FileQuery{
 
         //Checks if the removal was successfull and if so returns the result
         MDFSProtocolInfo info = response.getInfo();
-        if(info.getRemoved() == ActionStatus.SUCCESSFUL){
+        if(info.getRemoved() == EventStatus.SUCCESSFUL){
             return result;
         }
 			

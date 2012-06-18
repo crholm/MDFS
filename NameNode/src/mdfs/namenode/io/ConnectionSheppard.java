@@ -4,6 +4,7 @@ import mdfs.namenode.parser.SessionImpl;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.parser.Session;
 import org.json.JSONException;
 
@@ -21,7 +22,7 @@ import java.net.Socket;
  *
  */
 public class ConnectionSheppard implements Runnable{
-	String request = "";
+	MDFSProtocolHeader request;
 	Socket connection;
 	InputStream in;
 	OutputStream out;
@@ -52,11 +53,11 @@ public class ConnectionSheppard implements Runnable{
 	 * Create a session and parse it for a response
 	 */
 	private void getRequest() throws IOException{
-		
-		this.request = socketFunctions.receiveText(connection);
-	
+
 		try {
-			
+
+            this.request = new MDFSProtocolHeader(socketFunctions.receiveText(connection));
+
 			Verbose.print("Parsing request", this, Config.getInt("verbose")-6);
 			
 			session.setRequest(this.request);
@@ -73,7 +74,7 @@ public class ConnectionSheppard implements Runnable{
 	private void sendResponse(){
 		
 		if(session.getResponse() != null)
-			socketFunctions.sendText(connection, session.getResponse());
+			socketFunctions.sendText(connection, session.getResponse().toString());
 	}
 	
 	

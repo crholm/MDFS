@@ -1,12 +1,12 @@
 package mdfs.namenode.repositories;
 
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.locks.ReentrantLock;
-
-import org.json.JSONArray;
-
 import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.Config;
+import org.json.JSONArray;
+
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Stores Information about available DataNodes
@@ -128,6 +128,21 @@ public class DataNodeInfoRepository {
 		}
 		return array;
 	}
+
+    public LinkedList<String> toList() {
+        LinkedList<String> list = null;
+        lock.lock();
+        try{
+            list = new LinkedList<String>();
+
+            for (DataNodeInfoRepositoryNode node : listByAddress.values()) {
+                list.add(node.getAddress() + ":" + node.getPort());
+            }
+        }finally{
+            lock.unlock();
+        }
+        return list;
+    }
 	
 	
 }
