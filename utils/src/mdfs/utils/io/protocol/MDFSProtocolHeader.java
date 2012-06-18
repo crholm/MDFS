@@ -1,5 +1,8 @@
 package mdfs.utils.io.protocol;
 
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,9 +19,9 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     private String from;
     private String to;
 
-    private String stage;
-    private String type;
-    private String mode;
+    private Stage stage;
+    private Type type;
+    private Mode mode;
 
     private String error;
 
@@ -39,9 +42,11 @@ public class MDFSProtocolHeader extends MDFSProtocol {
             setFrom(jsonObject.optString("From", null));
             setTo(jsonObject.optString("To", null));
 
+
             setStage(jsonObject.optString("Stage", null));
             setType(jsonObject.optString("Type", null));
             setMode(jsonObject.optString("Mode", null));
+
 
             setError(jsonObject.optString("Error", null));
 
@@ -123,28 +128,49 @@ public class MDFSProtocolHeader extends MDFSProtocol {
         this.to = to;
     }
 
-    public String getStage() {
+    public Stage getStage() {
         return stage;
     }
 
-    public void setStage(String stage) {
+    public void setStage(Stage stage) {
         this.stage = stage;
     }
+    public void setStage(String stage) {
+        try{
+            this.stage = Stage.valueOf(stage.toUpperCase().trim());
+        }catch (Exception e){
+            this.stage = null;
+        }
+    }
 
-    public String getType() {
+    public Type getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Type type) {
         this.type = type;
     }
+    public void setType(String type) {
+        try{
+            this.type = Type.valueOf(type.toUpperCase().trim());
+        }catch (Exception e){
+            this.type = null;
+        }
+    }
 
-    public String getMode() {
+    public Mode getMode() {
         return mode;
     }
 
-    public void setMode(String mode) {
+    public void setMode(Mode mode) {
         this.mode = mode;
+    }
+    public void setMode(String mode) {
+        try{
+            this.mode = Mode.valueOf(mode.toUpperCase().trim());
+        }catch (Exception e){
+            this.mode = null;
+        }
     }
 
     public String getError() {

@@ -1,5 +1,6 @@
 package mdfs.utils.io.protocol;
 
+import mdfs.utils.io.protocol.enums.MetadataType;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,7 +16,7 @@ import java.util.LinkedList;
  */
 public class MDFSProtocolMetaData extends MDFSProtocol{
     private String path;
-    private String type;
+    private MetadataType type;
     private long size = -1L;
     private int permission = -1;
     private String owner;
@@ -119,12 +120,19 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         this.path = path;
     }
 
-    public String getType() {
+    public MetadataType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(MetadataType type) {
         this.type = type;
+    }
+    public void setType(String type) {
+        try{
+            this.type = MetadataType.valueOf(type.toUpperCase().trim());
+        }catch (Exception e){
+            this.type = null;
+        }
     }
 
     public long getSize() {
