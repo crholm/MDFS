@@ -1,5 +1,6 @@
 package mdfs.utils.io.protocol;
 
+import mdfs.utils.io.protocol.enums.ActionStatus;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,8 +15,8 @@ import java.util.LinkedList;
  * @version 1.0
  */
 public class MDFSProtocolInfo extends MDFSProtocol {
-    private String removed;
-    private String written;
+    private ActionStatus removed;
+    private ActionStatus written;
     private int id = -1;
     private String cookie;
     private LinkedList<String> datanodes;
@@ -79,20 +80,35 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
 
 
-    public String getRemoved() {
+    public ActionStatus getRemoved() {
         return removed;
     }
 
-    public void setRemoved(String removed) {
+    public void setRemoved(ActionStatus removed) {
         this.removed = removed;
     }
 
-    public String getWritten() {
+    public void setRemoved(String removed) {
+        try{
+            this.removed = ActionStatus.valueOf(removed.toUpperCase().trim());
+        }catch (Exception e){
+            this.removed = null;
+        }
+    }
+
+    public ActionStatus getWritten() {
         return written;
     }
 
-    public void setWritten(String written) {
+    public void setWritten(ActionStatus written) {
         this.written = written;
+    }
+    public void setWritten(String written) {
+        try{
+            this.written = ActionStatus.valueOf(written.toUpperCase().trim());
+        }catch (Exception e){
+            this.written = null;
+        }
     }
 
     public int getId() {

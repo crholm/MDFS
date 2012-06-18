@@ -108,7 +108,7 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             return null;
         }
 
-        return null;
+        return json;
     }
 
 
