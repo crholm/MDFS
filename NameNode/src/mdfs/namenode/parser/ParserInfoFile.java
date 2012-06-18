@@ -1,17 +1,15 @@
 package mdfs.namenode.parser;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-
-import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.DataNodeInfoRepository;
+import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Parses and execute updates regarding Info for Files in the different data repository that 
@@ -42,7 +40,7 @@ public class ParserInfoFile implements Parser {
 	private boolean parseWrite(){
 		try {
 			//Gets information from the request in to regard on what datanode the file has been stored
-			JSONObject request = session.getJsonRequest();
+			JSONObject request = session.getRequest();
 			JSONObject info = request.getJSONObject("Info");
 			String filePath = info.getString("path");
 			String host = info.getString("host");

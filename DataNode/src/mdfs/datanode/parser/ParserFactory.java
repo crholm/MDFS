@@ -1,6 +1,9 @@
 package mdfs.datanode.parser;
 
 
+import mdfs.utils.io.protocol.enums.Mode;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 import mdfs.utils.parser.Parser;
 
 /**
@@ -16,11 +19,11 @@ public class ParserFactory {
 	 * @param mode the mode of the header
 	 * @return a Parser fit for the needs.
 	 */
-	public Parser getParser(String stage, String type, String mode){
+	public Parser getParser(Stage stage, Type type, Mode mode){
 
 		
-		if(stage.equals("Request")){
-			if(type.equals("File")){
+		if(stage == Stage.REQUEST){
+			if(type == Type.FILE){
 				return new ParserRequestFile(mode);
 			}
 		}

@@ -1,14 +1,10 @@
 package mdfs.client.tests;
 
-import java.io.File;
-
-
-import org.json.JSONObject;
-
-
-
 import mdfs.client.api.FileQuery;
 import mdfs.client.api.FileQueryImpl;
+import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+
+import java.io.File;
 
 public class FileQuery_test {
 
@@ -54,15 +50,15 @@ public class FileQuery_test {
 	public void ls(){
 		System.out.println();
 		
-		JSONObject[] files = fq.ls("/raz/dir1/dir2", null);
-		for (JSONObject jsonObject : files) {
-			System.out.println("File --> " + jsonObject);
+		MDFSProtocolMetaData[] files = fq.ls("/raz/dir1/dir2", null);
+		for (MDFSProtocolMetaData metadata : files) {
+			System.out.println("File --> " + metadata);
 		}
 		
 		System.out.println();
 		files = fq.ls("/raz/dir1/dir2/Lab1", null);
-		for (JSONObject jsonObject : files) {
-			System.out.println("Singel File --> " + jsonObject);
+		for (MDFSProtocolMetaData metadata : files) {
+			System.out.println("Singel File --> " + metadata);
 		}
 		
 	}

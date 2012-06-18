@@ -130,6 +130,14 @@ public class MDFSProtocolInfo extends MDFSProtocol {
     public LinkedList<String> getDatanodes() {
         return datanodes;
     }
+    public String[] getDatanodesArray(String datanodes[]){
+        datanodes = this.datanodes.toArray(datanodes);
+        return datanodes;
+    }
+
+    public int getDatanodesSize() {
+        return datanodes.size();
+    }
 
     public void setDatanodes(LinkedList<String> datanodes) {
         this.datanodes = datanodes;

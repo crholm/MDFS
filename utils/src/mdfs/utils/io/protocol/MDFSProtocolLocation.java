@@ -82,8 +82,16 @@ public class MDFSProtocolLocation extends MDFSProtocol{
         return hosts;
     }
 
+    public String[] getHostsArray(String hosts[]) {
+        this.hosts.toArray(hosts);
+        return hosts;
+    }
+
     public void setHosts(LinkedList<String> hosts) {
         this.hosts = hosts;
+    }
+    public int getHostsSize(){
+        return this.hosts.size();
     }
 
     public void addHost(String host){

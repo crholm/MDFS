@@ -1,16 +1,17 @@
 package mdfs.datanode.io;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import mdfs.datanode.parser.SessionImpl;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.parser.Session;
-
 import org.json.JSONException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 
 
@@ -57,8 +58,9 @@ public class ConnectionSheppard implements Runnable{
 	
 		try {
 			Verbose.print("Parsing request...", this, Config.getInt("verbose")-2);
-			
-			session.addJsonRequest(this.request);
+
+
+           	session.setRequest(new MDFSProtocolHeader(this.request));
 			session.setInputStreamFromRequest(in);
 			
 			session.parseRequest();
@@ -81,7 +83,7 @@ public class ConnectionSheppard implements Runnable{
 		//Sends response if any
 		if(session.getResponse() != null){
 			Verbose.print("Sending response...", this, Config.getInt("verbose")-2);
-			socketFunctions.sendText(connection, session.getResponse());
+			socketFunctions.sendText(connection, session.getResponse().toString());
 			
 			//Sends file if any
 			if(session.getFileForResponse() != null)

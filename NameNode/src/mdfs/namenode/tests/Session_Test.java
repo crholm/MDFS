@@ -1,12 +1,10 @@
 package mdfs.namenode.tests;
 
-import org.json.JSONException;
-
-
 import mdfs.namenode.parser.SessionImpl;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepository;
+import org.json.JSONException;
 
 public class Session_Test {
 	public static void main(String[] args){		
@@ -18,7 +16,7 @@ public class Session_Test {
 		userRepo.addUser("raz", "qwerty"));
 		SessionImpl session = new SessionImpl();
 		System.out.println("Adding Json string: " +
-		session.addJsonRequest(getJsonTestWrite()));
+		session.setRequest(getJsonTestWrite()));
 		
 		try {
 			session.parseRequest();
@@ -35,7 +33,7 @@ public class Session_Test {
 		System.out.println("\nTrying retreving info:");
 		session = new SessionImpl();
 		System.out.println("Adding Json string: " +
-		session.addJsonRequest(getJsonTestInfo()));
+		session.setRequest(getJsonTestInfo()));
 		try {
 			session.parseRequest();
 		} catch (JSONException e) {

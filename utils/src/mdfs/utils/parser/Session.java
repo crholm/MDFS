@@ -1,10 +1,10 @@
 package mdfs.utils.parser;
 
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import org.json.JSONException;
+
 import java.io.File;
 import java.io.InputStream;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * Session is the object that contains request and respose for MDFS comunication protcol.
@@ -22,21 +22,21 @@ public interface Session {
 	
 	/**
 	 * Sets the JSON response that the session holds.
-	 * @param response the response in JSON format
-	 */
-	public void setJsonResponse(JSONObject response);
+     * @param response the response in JSON format
+     */
+	public void setResponse(MDFSProtocolHeader response);
 	/**
 	 * Enables other Objects to read and edit the request as a JSONObject
 	 * @return the request in present form as a JSONObject 
 	 */
-	public JSONObject getJsonRequest();
+	public MDFSProtocolHeader getRequest();
 	
 	/**
 	 * Adds a JSON string as request for the session
-	 * @param jsonString - A string that is parsed into a JSONObject
-	 * @return false if parsing fails or if a request is already added, true if successful in parsing request to JSONObject
+	 *
+     * @param request@return false if parsing fails or if a request is already added, true if successful in parsing request to JSONObject
 	 */
-	public boolean addJsonRequest(String jsonString);
+	public boolean setRequest(MDFSProtocolHeader request);
 
 	/**
 	 * 
@@ -51,7 +51,7 @@ public interface Session {
 	 * 
 	 * @return the response to request as a JSON String, null if request has not been parsed.
 	 */
-	public String getResponse();
+	public MDFSProtocolHeader getResponse();
 
 	/**
 	 * Sets and edits the satus for the session

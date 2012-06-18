@@ -203,6 +203,17 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         return children;
     }
 
+    public MDFSProtocolMetaData[] getChildernArray(MDFSProtocolMetaData[] children){
+        this.children.toArray(children);
+        return children;
+    }
+    public int getChildrenSize(){
+        if(children == null){
+            return 0;
+        }
+        return children.size();
+    }
+
     public void setChildren(LinkedList<MDFSProtocolMetaData> children) {
         this.children = children;
     }

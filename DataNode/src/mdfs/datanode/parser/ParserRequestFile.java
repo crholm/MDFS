@@ -1,18 +1,22 @@
 package mdfs.datanode.parser;
 
-import java.io.File;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import mdfs.datanode.io.NameNodeInformer;
 import mdfs.datanode.io.Replicator;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolLocation;
+import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.parser.FileNameOperations;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
 
 /**
  * A parser that handles all communication with the Stage=Request and Type=File and parses it.
@@ -21,7 +25,7 @@ import mdfs.utils.parser.Session;
  *
  */
 public class ParserRequestFile implements Parser{
-	private String mode;
+	private Mode mode;
 	private Session session;
 	private FileNameOperations nameTranslation = new FileNameOperations();
 	private SocketFunctions socketFunctions = new SocketFunctions();
@@ -33,7 +37,7 @@ public class ParserRequestFile implements Parser{
 	 * Modes can be = Write / Read / Remove / Edit / Info / Cascade
 	 * @param mode Write / Read / Remove / Edit / Info / Cascade
 	 */
-	public ParserRequestFile(String mode) {
+	public ParserRequestFile(Mode mode) {
 		this.mode = mode;
 	}
 
@@ -60,7 +64,7 @@ public class ParserRequestFile implements Parser{
 		JSONObject json = new JSONObject();
 		try {
 			json.put("From", Config.getString("address"));
-			json.put("To", session.getJsonRequest().getString("From"));
+			json.put("To", session.getRequest().getString("From"));
 			json.put("Stage", stage);
 			json.put("Type", type);
 			json.put("Mode", mode);
@@ -78,15 +82,15 @@ public class ParserRequestFile implements Parser{
 		this.session = session;
 
 		//Selects what "sub-parser" to use
-		if(mode.equals("Write")){
+		if(mode == Mode.WRITE){
 			return parseWrite();	
-		}else if(mode.equals("Read")){
+		}else if(mode == Mode.READ){
 			return parseRead();
-		}else if(mode.equals("Remove")){
+		}else if(mode == Mode.REMOVE){
 			return parseRemove();
-		}else if(mode.equals("Info")){
+		}else if(mode == Mode.INFO){
 			
-		}else if(mode.equals("Cascade")){
+		}else if(mode == Mode.CASCADE){
 			return parseCascade();
 		}else{
 			setErrorMsg("None valid Mode in Header");
@@ -104,16 +108,16 @@ public class ParserRequestFile implements Parser{
 	 */
 	private boolean parseCascade() {
 		//Gets the request as a JSONObeject from the session
-		JSONObject jsonRequest = session.getJsonRequest();
+		MDFSProtocolHeader request = session.getRequest();
 				
 		try {
 			//Retrieves metadata information about the file
-			JSONObject metadata = jsonRequest.getJSONObject("Meta-data");
+			MDFSProtocolMetaData metadata = request.getMetadata();
 			//Gets the loaction information
-			JSONObject location = metadata.getJSONObject("Location");
+			MDFSProtocolLocation location = metadata.getLocation();
 			
 			//Retrivse the file name and builds the path to it
-			String fileName = location.getString("name");
+			String fileName = location.getName();
 			String fullPath = nameTranslation.translateFileNameToFullPath(fileName);
 			
 			//Creates all dirs on the local FS necessary to write the file to it
@@ -153,7 +157,7 @@ public class ParserRequestFile implements Parser{
 	 */
 	private boolean parseRemove() {
 		//Retrieves the request
-		JSONObject jsonRequest = session.getJsonRequest();
+		JSONObject jsonRequest = session.getRequest();
 		try {
 			//Figurers out what file is to be removed
 			JSONObject metadata = jsonRequest.getJSONObject("Meta-data");
@@ -181,7 +185,7 @@ public class ParserRequestFile implements Parser{
 	 */
 	private boolean parseRead() {
 		//Get request and builds a basic response
-		JSONObject jsonRequest = session.getJsonRequest();
+		JSONObject jsonRequest = session.getRequest();
 		JSONObject jsonResponse = createJsonHeader("Response", "File", mode);
 		try {			
 			//Add metadata to the response
@@ -192,7 +196,7 @@ public class ParserRequestFile implements Parser{
 			File file = new File(nameTranslation.translateFileNameToFullPath(fileName));
 			
 			//Sets the response 
-			session.setJsonResponse(jsonResponse);
+			session.setResponse(jsonResponse);
 			
 			//If the file exists and are to be sent othewise an error is set in the response
 			if(file.exists()){
@@ -206,7 +210,7 @@ public class ParserRequestFile implements Parser{
 		} catch (JSONException e) {
 			try {
 				jsonResponse.put("Error", "Invalid JSON header");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 			} catch (JSONException e1) {}
 			e.printStackTrace();
 			return false;
@@ -223,7 +227,7 @@ public class ParserRequestFile implements Parser{
 	 */
 	private boolean parseWrite(){
 		//Get request and builds a basic response
-		JSONObject jsonRequest = session.getJsonRequest();
+		JSONObject jsonRequest = session.getRequest();
 		JSONObject jsonResponse = createJsonHeader("Response", "File", mode);
 		
 		try {
@@ -271,14 +275,14 @@ public class ParserRequestFile implements Parser{
 			//Updates the response for the client
 			jsonResponse.put("Meta-data", metadata);
 			jsonResponse.put("Info", info);
-			session.setJsonResponse(jsonResponse);
+			session.setResponse(jsonResponse);
 			
 			return true;
 			
 		} catch (JSONException e) {
 			try {
 				jsonResponse.put("Error", "Invalid JSON header");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 			} catch (JSONException e1) {}
 			e.printStackTrace();
 			return false;

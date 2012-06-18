@@ -1,16 +1,16 @@
 package mdfs.namenode.io;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import mdfs.namenode.parser.SessionImpl;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
 import mdfs.utils.parser.Session;
-
 import org.json.JSONException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 
 
@@ -59,7 +59,7 @@ public class ConnectionSheppard implements Runnable{
 			
 			Verbose.print("Parsing request", this, Config.getInt("verbose")-6);
 			
-			session.addJsonRequest(this.request);
+			session.setRequest(this.request);
 			session.parseRequest();
 			
 			Verbose.print("Parsing done.", this, Config.getInt("verbose")-6);

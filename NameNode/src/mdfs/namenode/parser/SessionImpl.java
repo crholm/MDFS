@@ -1,15 +1,15 @@
 package mdfs.namenode.parser;
 
-import java.io.File;
-import java.io.InputStream;
-
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
+import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.InputStream;
 
 
 /**
@@ -29,9 +29,9 @@ public class SessionImpl implements Session{
 	
 	/**
 	 * Sets the JSON response that the session holds.
-	 * @param response
-	 */
-	public void setJsonResponse(JSONObject response){
+     * @param response
+     */
+	public void setResponse(MDFSProtocolHeader response){
 		this.response = response; 
 	}
 	
@@ -39,21 +39,21 @@ public class SessionImpl implements Session{
 	 * Enables other Objects to read and edit the request as a JSONObject
 	 * @return the request in present form as a JSONObject 
 	 */
-	public JSONObject getJsonRequest(){
+	public MDFSProtocolHeader getRequest(){
 		return request;
 	}
 	
 	/**
 	 * Adds a JSON string as request for the session
-	 * @param jsonString - A string that is parsed into a JSONObject
-	 * @return false if parsing fails or if a request is already added, true if sucessfull in parsing request to JSONObject
+	 *
+     * @param request@return false if parsing fails or if a request is already added, true if sucessfull in parsing request to JSONObject
 	 */
-	public boolean addJsonRequest(String jsonString){
+	public boolean setRequest(MDFSProtocolHeader request){
 		if(request != null){
 			return false;
 		}
 		try {
-			request = new JSONObject(jsonString);
+			request = new JSONObject(request);
 		} catch (JSONException e) {
 			return false;
 		}
@@ -106,7 +106,7 @@ public class SessionImpl implements Session{
 	 * 
 	 * @return the response to request as a JSON String, null if request has not been parsed.
 	 */
-	public String getResponse(){
+	public MDFSProtocolHeader getResponse(){
 		if(response == null){
 			return null;
 		}

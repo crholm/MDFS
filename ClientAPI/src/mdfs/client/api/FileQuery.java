@@ -1,9 +1,9 @@
 package mdfs.client.api;
 
+import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+
 import java.io.File;
 import java.io.InputStream;
-
-import org.json.JSONObject;
 
 /**
  * This Interface enabels the user to access a MDFS file system in a manner that are simulare to generic terminal commands.
@@ -43,7 +43,7 @@ public interface FileQuery {
 	 * @return object[0] is the Meta-data of the dir and object[1..*] are all the children of object[0] if any. 
 	 *  
 	 */
-	public JSONObject[] ls(String flag);
+	public MDFSProtocolMetaData[] ls(String flag);
 	
 	/**
 	 * Returns a Array of JSONObjects representing directory that are navigated too.
@@ -52,7 +52,7 @@ public interface FileQuery {
 	 * @return object[0] is the Meta-data of the dir or object[1..*] are all the children of object[0] if any. 
 	 * @return null if file or dir dose not exist
 	 */
-	public JSONObject[] ls(String path, String flag);
+	public MDFSProtocolMetaData[] ls(String path, String flag);
 	
 	/**
 	 * Returns the current path that are navigated too in MDFS

@@ -1,19 +1,13 @@
 package mdfs.namenode.parser;
 
 
-
 import mdfs.namenode.io.DataNodeQuerier;
-import mdfs.namenode.repositories.DataNodeInfoRepository;
-import mdfs.namenode.repositories.DataTypeEnum;
-import mdfs.namenode.repositories.MetaDataRepository;
-import mdfs.namenode.repositories.MetaDataRepositoryNode;
-import mdfs.namenode.repositories.UserDataRepository;
+import mdfs.namenode.repositories.*;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.parser.FileNameOperations;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,13 +65,13 @@ public class ParserRequestMetaData implements Parser {
 		String user = null;
 		String pass = null;
 		try {
-			user = session.getJsonRequest().getString("User");
-			pass = session.getJsonRequest().getString("Pass");
+			user = session.getRequest().getString("User");
+			pass = session.getRequest().getString("Pass");
 			//Checks so that user credentials are provided
 			if(user == null || pass == null){
 				JSONObject jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 				jsonResponse.put("Error", "No full user or password was given in request");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 				
 				setErrorMsg("User or Pass was not included in Header");
 				return false;
@@ -87,7 +81,7 @@ public class ParserRequestMetaData implements Parser {
 				//Creates a error response
 				JSONObject jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 				jsonResponse.put("Error", "In valid user or password");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 				
 				setErrorMsg("User or pass was wrong");
 				return false;
@@ -107,7 +101,7 @@ public class ParserRequestMetaData implements Parser {
 				//Creates a error response
 				JSONObject jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 				jsonResponse.put("Error", "Mode: \"" + mode + "\" is an unvalid mode");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 				return false;
 			}
 		
@@ -131,7 +125,7 @@ public class ParserRequestMetaData implements Parser {
 		
 		try {
 			//Retrieves the Meta-data in the request that the request is regarding
-			metaDataJson = session.getJsonRequest().getJSONObject("Meta-data");
+			metaDataJson = session.getRequest().getJSONObject("Meta-data");
 			jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 			//Fetches the full path to the file in MDFS
 			String path = metaDataJson.getString("path");
@@ -140,7 +134,7 @@ public class ParserRequestMetaData implements Parser {
 			if(metaDataRepo.hasChildren(path)){
 				//Creates a error response
 				jsonResponse.put("Error", "failed to remove `" + path +"': Directory not empty ");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 				return false;
 			}
 			
@@ -152,7 +146,7 @@ public class ParserRequestMetaData implements Parser {
 			if(node == null){
 				//Creates a error response
 				jsonResponse.put("Error", " cannot remove `" + path +"': No such file or directory");
-				session.setJsonResponse(jsonResponse);
+				session.setResponse(jsonResponse);
 				return false;
 			}
 			
@@ -170,7 +164,7 @@ public class ParserRequestMetaData implements Parser {
 			info.put("removed", "successful");
 			jsonResponse.put("Info", info);
 			
-			session.setJsonResponse(jsonResponse);
+			session.setResponse(jsonResponse);
 			return true;
 			
 			
@@ -197,7 +191,7 @@ public class ParserRequestMetaData implements Parser {
 				jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 				
 				//Retriving nessesary information from the request
-				metaDataJson = session.getJsonRequest().getJSONObject("Meta-data");
+				metaDataJson = session.getRequest().getJSONObject("Meta-data");
 				metaDataRepo = MetaDataRepository.getInstance();
 				
 				//Retriving the node that are to be read
@@ -207,7 +201,7 @@ public class ParserRequestMetaData implements Parser {
 				//if the node==null it did not exist and an error us sent as a response
 				if(node == null){
 					jsonResponse.put("Error", "No such file or directory");
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 					return false;
 				}
 								
@@ -228,17 +222,17 @@ public class ParserRequestMetaData implements Parser {
 					
 					
 					jsonResponse.put("Meta-data", metadata);
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 					return true;
 					
 				//If node is a file, a the metadata and location of it is set as a response
 				}else if(node.getFileType() == DataTypeEnum.FILE){
 					jsonResponse.put("Meta-data", node.toJSON());
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 					return true;
 				}else{
 					jsonResponse.put("Error", "Data type is not defined");
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 					return false;
 				}
 				
@@ -264,7 +258,7 @@ public class ParserRequestMetaData implements Parser {
 		MetaDataRepository metaDataRepo;
 		try {
 			//Fetches the metadata that is to written along with the MetaDataRepository
-			metaDataJson = session.getJsonRequest().getJSONObject("Meta-data");
+			metaDataJson = session.getRequest().getJSONObject("Meta-data");
 			metaDataRepo = MetaDataRepository.getInstance();
 			
 			//Creates the header for the response
@@ -302,7 +296,7 @@ public class ParserRequestMetaData implements Parser {
 				if(!metaDataRepo.add(node.getKey(), node)){
 					//This happens if one is trying to add a file or dir of which the parent dirs dose not exist
 					jsonResponse.put("Error", "File could not be added to the FS, No such file or directory");
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 				
 					return false;
 				}
@@ -310,7 +304,7 @@ public class ParserRequestMetaData implements Parser {
 			}else if(node.getFileType() == DataTypeEnum.FILE){
 				if(!metaDataJson.getString("type").equals("file")){
 					jsonResponse.put("Error", "A file at that path already exist");
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 				
 					return false;
 				}
@@ -319,7 +313,7 @@ public class ParserRequestMetaData implements Parser {
 			}else if(node.getFileType() == DataTypeEnum.DIR){
 				if(!metaDataJson.getString("type").equals("dir")){
 					jsonResponse.put("Error", "A dir at that path already exist");
-					session.setJsonResponse(jsonResponse);
+					session.setResponse(jsonResponse);
 					
 					return false;
 				}
@@ -339,7 +333,7 @@ public class ParserRequestMetaData implements Parser {
 			
 			
 			jsonResponse.put("Meta-data", node.toJSON());
-			session.setJsonResponse(jsonResponse);
+			session.setResponse(jsonResponse);
 			
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -362,11 +356,11 @@ public class ParserRequestMetaData implements Parser {
 		MetaDataRepositoryNode fileMetaData;
 		
 		try {
-			tmpJson = session.getJsonRequest().getJSONObject("Meta-data");
+			tmpJson = session.getRequest().getJSONObject("Meta-data");
 			fileMetaData = MetaDataRepository.getInstance().get( tmpJson.getString("path") );
 			jsonResponse = createJsonHeader("Response", "Meta-data", mode);
 			jsonResponse.put("Meta-data", fileMetaData.toJSON());
-			session.setJsonResponse(jsonResponse);
+			session.setResponse(jsonResponse);
 			
 		} catch (JSONException e) {
 			e.printStackTrace();
@@ -383,7 +377,7 @@ public class ParserRequestMetaData implements Parser {
 	private JSONObject createJsonHeader(String stage, String type, String mode) throws JSONException{
 		JSONObject json = new JSONObject();
 		json.put("From", Config.getString("address"));
-		json.put("To", session.getJsonRequest().getString("From"));
+		json.put("To", session.getRequest().getString("From"));
 		json.put("Stage", stage);
 		json.put("Type", type);
 		json.put("Mode", mode);
