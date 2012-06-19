@@ -91,6 +91,9 @@ public class MDFSProtocolLocation extends MDFSProtocol{
         this.hosts = hosts;
     }
     public int getHostsSize(){
+        if(hosts == null){
+            return 0;
+        }
         return this.hosts.size();
     }
 
@@ -99,5 +102,6 @@ public class MDFSProtocolLocation extends MDFSProtocol{
         if(hosts == null)
             hosts = new LinkedList<String>();
         hosts.add(host);
+        setHosts(hosts);
     }
 }

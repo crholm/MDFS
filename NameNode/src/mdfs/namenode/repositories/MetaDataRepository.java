@@ -1,10 +1,12 @@
 package mdfs.namenode.repositories;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import mdfs.namenode.sql.MySQLFetch;
 import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.FSTree;
+import mdfs.utils.io.protocol.enums.MetadataType;
+
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * A implementation of MetaDataRepository that is synchronized via {@link ReentrantLock}
  * for allowing multiple threads. When a lock is acquired all other operations on the MetaDataRepository
@@ -254,7 +256,7 @@ public class MetaDataRepository {
 			MetaDataRepositoryNode deafualtNode = new MetaDataRepositoryNode();
 			deafualtNode.setOwner("root");
 			deafualtNode.setGroup("root");
-			deafualtNode.setFileType(DataTypeEnum.DIR);
+			deafualtNode.setFileType(MetadataType.DIR);
 			deafualtNode.setFilePath("/");
 			deafualtNode.setPermission((short)774);
 			deafualtNode.setSize(0);

@@ -36,7 +36,8 @@ public class CLI {
 				}
 				timerStop();
 				
-				
+
+
 				for (MDFSProtocolMetaData file : files) {
 
                     System.out.print (file.getPermission() + "   ");

@@ -1,15 +1,15 @@
 package mdfs.namenode.sql;
 
+import mdfs.namenode.repositories.MetaDataRepositoryNode;
+import mdfs.namenode.repositories.UserDataRepositoryNode;
+import mdfs.utils.Config;
+import mdfs.utils.io.protocol.enums.MetadataType;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
-
-import mdfs.namenode.repositories.DataTypeEnum;
-import mdfs.namenode.repositories.MetaDataRepositoryNode;
-import mdfs.namenode.repositories.UserDataRepositoryNode;
-import mdfs.utils.Config;
 
 /**
  * This class are used to fetch specific element in regard to MDFS from a MySQL Database and the 
@@ -155,9 +155,9 @@ public class MySQLFetch {
 				
 				String fileType = result.getString("fileType");
 				if(fileType.equals("DIR"))
-					node.setFileType(DataTypeEnum.DIR);
+					node.setFileType(MetadataType.DIR);
 				else if(fileType.equals("FILE"))
-					node.setFileType(DataTypeEnum.FILE);
+					node.setFileType(MetadataType.FILE);
 				
 				node.setStorageName(result.getString("storageName"));
 				node.setPermission(result.getShort("permission"));

@@ -4,7 +4,6 @@ import mdfs.namenode.parser.SessionImpl;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepository;
-import org.json.JSONException;
 
 public class Session_Test {
 	public static void main(String[] args){		
@@ -15,8 +14,10 @@ public class Session_Test {
 		System.out.println("Adding user: " + 
 		userRepo.addUser("raz", "qwerty"));
 		SessionImpl session = new SessionImpl();
-		System.out.println("Adding Json string: " +
-		session.setRequest(getJsonTestWrite()));
+		/*
+        System.out.println("Adding Json string: " +
+
+        session.setRequest(getJsonTestWrite()));
 		
 		try {
 			session.parseRequest();
@@ -24,6 +25,7 @@ public class Session_Test {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
 		MetaDataRepositoryNode node = metaRepo.get("raz/info.txt");
 		System.out.println("Node json data:\n" + node.toJSON());
@@ -32,7 +34,8 @@ public class Session_Test {
 		
 		System.out.println("\nTrying retreving info:");
 		session = new SessionImpl();
-		System.out.println("Adding Json string: " +
+		/*
+        System.out.println("Adding Json string: " +
 		session.setRequest(getJsonTestInfo()));
 		try {
 			session.parseRequest();
@@ -41,7 +44,7 @@ public class Session_Test {
 			e.printStackTrace();
 		}
 		System.out.println("Response json data:\n" + session.getResponse());
-		
+		 */
 	}
 	
 	public static String getJsonTestWrite(){

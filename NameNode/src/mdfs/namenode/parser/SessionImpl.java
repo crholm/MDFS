@@ -6,7 +6,6 @@ import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.InputStream;
@@ -19,8 +18,8 @@ import java.io.InputStream;
  *
  */
 public class SessionImpl implements Session{
-	private JSONObject request = null;
-	private JSONObject response = null;
+	private MDFSProtocolHeader request = null;
+	private MDFSProtocolHeader response = null;
 	private Parser parser;
 	
 	@SuppressWarnings("unused")
@@ -49,14 +48,8 @@ public class SessionImpl implements Session{
      * @param request@return false if parsing fails or if a request is already added, true if sucessfull in parsing request to JSONObject
 	 */
 	public boolean setRequest(MDFSProtocolHeader request){
-		if(request != null){
-			return false;
-		}
-		try {
-			request = new JSONObject(request);
-		} catch (JSONException e) {
-			return false;
-		}
+		this.request = request;
+
 		return true;
 	}
 	
@@ -66,29 +59,24 @@ public class SessionImpl implements Session{
 	 * @return false - if reqest is not set, or failing to parse request accordingly to MDFS Communication Protocol
 	 * @throws JSONException
 	 */
-	public boolean parseRequest() throws JSONException { 
+	public boolean parseRequest() {
 		//Checks so that the request contains the fields To, From, Stage, Type and Mode
-		if(request != null && request.has("To") && request.has("From") && request.has("Stage") && request.has("Mode") && request.has("Type")){
+		if(request.getStage() != null && request.getMode() != null && request.getType() != null){
 			
-			//Checks so that the field To contains the current name nods address
-			if( request.getString("To").equals(Config.getString("address"))){
-				
-				//Creates a parser from given information 
-				parser = parserFactory.getParser(request.getString("Stage"), request.getString("Type"), request.getString("Mode"));
-				
-				//Parses the request and wraps the session in it.
-				if(!parser.parse(this)){
-					setStatus("error");
-					return false;
-				}
-			}else{
-				setStatus("error");
-				return false;
-			}
-		}else{
-			setStatus("error");
-			return false;
-		}
+
+            //Creates a parser from given information
+            parser = parserFactory.getParser(request.getStage(), request.getType(), request.getMode());
+
+            //Parses the request and wraps the session in it.
+            if(!parser.parse(this)){
+                setStatus("error - Parsing went wrong");
+                return false;
+            }
+        }else{
+            setStatus("error - Stage, Mode or Type are missing");
+            return false;
+        }
+
 		
 		return true;
 	}
@@ -107,10 +95,7 @@ public class SessionImpl implements Session{
 	 * @return the response to request as a JSON String, null if request has not been parsed.
 	 */
 	public MDFSProtocolHeader getResponse(){
-		if(response == null){
-			return null;
-		}
-		return response.toString();
+		return response;
 	}
 	
 	@Override

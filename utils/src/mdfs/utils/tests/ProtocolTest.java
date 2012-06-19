@@ -40,7 +40,7 @@ public class ProtocolTest {
         metaData.setGroup("raz");
         metaData.setCreated("125161");
         metaData.setLastEdited("1234135");
-        metaData.setLastToutched("12352");
+        metaData.setLastTouched("12352");
 
 
         System.out.println(metaData);

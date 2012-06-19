@@ -1,18 +1,14 @@
 package mdfs.namenode.tests.junit;
 
-import static org.junit.Assert.*;
-
-import mdfs.namenode.repositories.DataNodeInfoRepository;
-import mdfs.namenode.repositories.DataTypeEnum;
-import mdfs.namenode.repositories.MetaDataRepository;
-import mdfs.namenode.repositories.MetaDataRepositoryNode;
-import mdfs.namenode.repositories.UserDataRepository;
-import mdfs.namenode.repositories.UserDataRepositoryNode;
+import mdfs.namenode.repositories.*;
 import mdfs.utils.Config;
-
+import mdfs.utils.io.protocol.enums.MetadataType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class RepositoriesModuleTest {
 	
@@ -93,11 +89,11 @@ public class RepositoriesModuleTest {
 	public void testMetaDataRepository() {
 		MetaDataRepositoryNode node1 = new MetaDataRepositoryNode();
 		node1.setFilePath("/metaRepoTest");
-		node1.setFileType(DataTypeEnum.DIR);
+		node1.setFileType(MetadataType.DIR);
 				
 		MetaDataRepositoryNode node2 = new MetaDataRepositoryNode();
 		node2.setFilePath("/metaRepoTest/dir");
-		node2.setFileType(DataTypeEnum.DIR);
+		node2.setFileType(MetadataType.DIR);
 		
 		assertTrue(!metaDataRepository.add(node2.getKey(), node2));
 		assertTrue(metaDataRepository.add(node1.getKey(), node1));
@@ -106,7 +102,7 @@ public class RepositoriesModuleTest {
 		for(int i = 0; i < 10; i++){
 			MetaDataRepositoryNode node = new MetaDataRepositoryNode();
 			node.setFilePath("/metaRepoTest/" + i);
-			node.setFileType(DataTypeEnum.FILE);
+			node.setFileType(MetadataType.FILE);
 			node.setSize(10);
 			assertTrue(metaDataRepository.add(node.getKey(), node));
 			assertTrue(!metaDataRepository.add(node.getKey(), node));
@@ -118,7 +114,7 @@ public class RepositoriesModuleTest {
 		for(int i = 0; i < 10; i++){
 			MetaDataRepositoryNode node = new MetaDataRepositoryNode();
 			node.setFilePath("/metaRepoTest/dir/" + i);
-			node.setFileType(DataTypeEnum.FILE);
+			node.setFileType(MetadataType.FILE);
 			node.setSize(10);
 			nodes[i] = node;
 		}
@@ -133,7 +129,7 @@ public class RepositoriesModuleTest {
 		}
 		MetaDataRepositoryNode node3 = new MetaDataRepositoryNode();
 		node3.setFilePath("/metaRepoTest/dir");
-		node3.setFileType(DataTypeEnum.FILE);
+		node3.setFileType(MetadataType.FILE);
 		node3.setSize(10);
 		
 		assertTrue(metaDataRepository.replace(node3.getKey(), node3) == node2);

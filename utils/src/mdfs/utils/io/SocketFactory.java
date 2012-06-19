@@ -46,6 +46,9 @@ public class SocketFactory {
 	 * @return a socket to first responding host
 	 */
 	public Socket createSocket(String[] hosts) {
+        if(hosts == null){
+            return null;
+        }
 		for (String string : hosts) {
 			String[] host = string.split(":");
 			

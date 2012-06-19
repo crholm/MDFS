@@ -22,7 +22,7 @@ import java.net.Socket;
  *
  */
 public class ConnectionSheppard implements Runnable{
-	String request = "";
+	String request;
 	Socket connection;
 	InputStream in;
 	OutputStream out;
@@ -59,8 +59,13 @@ public class ConnectionSheppard implements Runnable{
 		try {
 			Verbose.print("Parsing request...", this, Config.getInt("verbose")-2);
 
+           System.out.print("String request ->" + this.request);
 
-           	session.setRequest(new MDFSProtocolHeader(this.request));
+            MDFSProtocolHeader h = new MDFSProtocolHeader(this.request);
+
+            System.out.println("Header request ->" + h);
+
+           	session.setRequest(h);
 			session.setInputStreamFromRequest(in);
 			
 			session.parseRequest();

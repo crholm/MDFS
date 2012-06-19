@@ -56,7 +56,16 @@ public class ConnectionSheppard implements Runnable{
 
 		try {
 
-            this.request = new MDFSProtocolHeader(socketFunctions.receiveText(connection));
+            String input = socketFunctions.receiveText(connection);
+
+         //   System.out.println("--> " + input);
+
+            this.request = new MDFSProtocolHeader(input);
+
+         //   System.out.println("--> " + this.request.getStage());
+         //   System.out.println("--> " + this.request.getType());
+         //   System.out.println("--> " + this.request.getMode());
+
 
 			Verbose.print("Parsing request", this, Config.getInt("verbose")-6);
 			

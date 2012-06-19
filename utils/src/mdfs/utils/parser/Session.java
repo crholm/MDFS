@@ -18,7 +18,7 @@ public interface Session {
 	 * @return false - if reqest is not set, or failing to parse request accordingly to MDFS Communication Protocol
 	 * @throws JSONException
 	 */
-	public boolean parseRequest() throws JSONException;
+	public boolean parseRequest();
 	
 	/**
 	 * Sets the JSON response that the session holds.

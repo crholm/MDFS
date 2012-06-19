@@ -33,6 +33,7 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         this(new JSONObject(jsonString));
     }
     public MDFSProtocolMetaData(JSONObject jsonObject){
+
         if(jsonObject != null){
             setPath(jsonObject.optString("path", null));
             setType(jsonObject.optString("type", null));
@@ -42,7 +43,7 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             setGroup(jsonObject.optString("group", null));
             setCreated(jsonObject.optString("created", null));
             setLastEdited(jsonObject.optString("lastEdited", null));
-            setLastToutched(jsonObject.optString("lastToutched", null));
+            setLastTouched(jsonObject.optString("lastToutched", null));
 
             if(jsonObject.has("Location"))
                 setLocation(new MDFSProtocolLocation(jsonObject.optJSONObject("Location")));
@@ -89,17 +90,18 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             if(getLastEdited() != null)
                 json.put("lastEdited", getLastEdited());
 
-            if(getLastToutched() != null)
-                json.put("lastToutched", getLastToutched());
+            if(getLastTouched() != null)
+                json.put("lastToutched", getLastTouched());
 
             if(getLocation() != null)
                 json.put("Location", getLocation().toJSON());
 
             if(getChildren() != null){
+
                 JSONArray array = new JSONArray();
-                LinkedList<MDFSProtocolMetaData> children = getChildren();
-                for(MDFSProtocolMetaData child : children)
+                for(MDFSProtocolMetaData child : getChildren())
                     array.put(child.toJSON());
+                json.put("Children", array);
             }
 
 
@@ -143,10 +145,47 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         this.size = size;
     }
 
+
+    /**
+     * Get permissions for the file.
+     * Permissions are set in a Unix fashion by a 3-letter number ex 764
+     * -the first letter, 7, is the owners permissions.
+     * -the second letter, 6, us the groups permissions.
+     * -the third letter, 4, is every once permissions.
+     *
+     * Guide:
+     * 7	full
+     * 6	read and write
+     * 5	read and execute
+     * 4	read only
+     * 3	write and execute
+     * 2	write only
+     * 1	execute only
+     * 0	none
+     * @return permission as a short
+     */
     public int getPermission() {
         return permission;
     }
 
+    /**
+     * Get permissions for the file.
+     * Permissions are set in a Unix fashion by a 3-letter number ex 764
+     * -the first letter, 7, is the owners permissions.
+     * -the second letter, 6, us the groups permissions.
+     * -the third letter, 4, is every once permissions.
+     *
+     * Guide:
+     * 7	full
+     * 6	read and write
+     * 5	read and execute
+     * 4	read only
+     * 3	write and execute
+     * 2	write only
+     * 1	execute only
+     * 0	none
+     * @param permission as a int
+     */
     public void setPermission(int permission) {
         this.permission = permission;
     }
@@ -183,12 +222,12 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         this.lastEdited = lastEdited;
     }
 
-    public String getLastToutched() {
+    public String getLastTouched() {
         return lastToutched;
     }
 
-    public void setLastToutched(String lastToutched) {
-        this.lastToutched = lastToutched;
+    public void setLastTouched(String lastTouched) {
+        this.lastToutched = lastTouched;
     }
 
     public MDFSProtocolLocation getLocation() {
@@ -223,5 +262,6 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         if(children == null)
             children = new LinkedList<MDFSProtocolMetaData>();
         children.add(child);
+        setChildren(children);
     }
 }

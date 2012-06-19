@@ -5,7 +5,6 @@ import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
-import org.json.JSONException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -39,7 +38,7 @@ public class SessionImpl implements Session{
 
 	@Override
 	public boolean setRequest(MDFSProtocolHeader request) {
-		if(request != null){
+		if(request == null){
 			return false;
 		}
 		this.request = request;
@@ -79,8 +78,9 @@ public class SessionImpl implements Session{
 	}
 
 	@Override
-	public boolean parseRequest() throws JSONException {
+	public boolean parseRequest() {
 		//Checks so that the request contains the fields To, From, Stage, Type and Mode
+
 		if(request != null && request.getStage() != null && request.getMode() != null && request.getType() != null){
 			
 			//Checks so that the field To contains the current data nods address
@@ -91,12 +91,12 @@ public class SessionImpl implements Session{
 				
 				//Parses the request and wraps the session in it.
 				if(!parser.parse(this)){
-					setStatus("error");
+					setStatus("error - Parsing failed");
 					return false;
 				}
 
 		}else{
-			setStatus("error");
+			setStatus("error - Requets, Stage, Mode or Type is missing");
 			return false;
 		}
 		

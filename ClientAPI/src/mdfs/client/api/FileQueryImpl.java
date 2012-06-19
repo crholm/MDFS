@@ -105,6 +105,7 @@ public class FileQueryImpl implements FileQuery{
 
 
 		//Sends request to name node
+
 		socketFunctions.sendText(nameNodeSocket, request.toString());
 		MDFSProtocolHeader response;
 		MDFSProtocolMetaData[] toBeReturned = new MDFSProtocolMetaData[1];
@@ -112,7 +113,8 @@ public class FileQueryImpl implements FileQuery{
         //Retrieves the response from the name node
 
         try {
-            response = new MDFSProtocolHeader(socketFunctions.receiveText(nameNodeSocket));
+            String s =  socketFunctions.receiveText(nameNodeSocket);
+            response = new MDFSProtocolHeader(s);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -133,6 +135,7 @@ public class FileQueryImpl implements FileQuery{
 
         //File contains the metadata of the ls request to the name node
         MDFSProtocolMetaData file = response.getMetadata();
+
 
         //If file requested has children they are stored in the array as well
         if(file.getChildrenSize() != 0){
@@ -399,7 +402,7 @@ public class FileQueryImpl implements FileQuery{
             metadata.setGroup(user);
             metadata.setCreated(Time.getTimeStamp(sourceFile.lastModified()));
             metadata.setLastEdited(Time.getTimeStamp(sourceFile.lastModified()));
-            metadata.setLastToutched(Time.getTimeStamp());
+            metadata.setLastTouched(Time.getTimeStamp());
 
             request.setMetadata(metadata);
 
@@ -414,7 +417,10 @@ public class FileQueryImpl implements FileQuery{
 			//Retrives response from name node
             MDFSProtocolHeader response = null;
             try {
-                response = new MDFSProtocolHeader(socketFunctions.receiveText(nameNodeSocket));
+                String s = socketFunctions.receiveText(nameNodeSocket);
+                System.out.println("FileQueryImpl1 -->" + s);
+                response = new MDFSProtocolHeader(s);
+                System.out.println("FileQueryImpl2 -->" + response);
             } catch (JSONException e) {
                 e.printStackTrace();
                 return false;
@@ -425,7 +431,8 @@ public class FileQueryImpl implements FileQuery{
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
-			
+
+
 			
 			Socket dataNodeSocket = null;
 
@@ -465,11 +472,12 @@ public class FileQueryImpl implements FileQuery{
             request2.setStage(Stage.REQUEST);
             request2.setType(Type.FILE);
             request2.setMode(Mode.WRITE);
-            request2.setMetadata(request.getMetadata());
+            request2.setMetadata(response.getMetadata());
+            request2.setInfo(response.getInfo());
 
 
 			//Sends request and file to data node.
-			socketFunctions.sendText(dataNodeSocket, request.toString());
+			socketFunctions.sendText(dataNodeSocket, request2.toString());
 			socketFunctions.sendFile(dataNodeSocket, sourceFile);
 			
 			//Receives response from data node
@@ -555,7 +563,7 @@ public class FileQueryImpl implements FileQuery{
         String timestamp = Time.getTimeStamp();
         metadata.setCreated(timestamp);
         metadata.setLastEdited(timestamp);
-        metadata.setLastToutched(timestamp);
+        metadata.setLastTouched(timestamp);
 
         request.setMetadata(metadata);
 

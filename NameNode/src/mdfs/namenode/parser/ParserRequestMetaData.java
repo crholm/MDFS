@@ -2,7 +2,10 @@ package mdfs.namenode.parser;
 
 
 import mdfs.namenode.io.DataNodeQuerier;
-import mdfs.namenode.repositories.*;
+import mdfs.namenode.repositories.DataNodeInfoRepository;
+import mdfs.namenode.repositories.MetaDataRepository;
+import mdfs.namenode.repositories.MetaDataRepositoryNode;
+import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
@@ -12,7 +15,6 @@ import mdfs.utils.io.protocol.enums.*;
 import mdfs.utils.parser.FileNameOperations;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
-import org.json.JSONException;
 
 import java.util.LinkedList;
 
@@ -153,7 +155,7 @@ public class ParserRequestMetaData implements Parser {
         *  This since dir:s only exists as metadata on the name node while files reside on the NameNode as
         *  Metadata and on the DataNode as raw anonymous data.
         */
-        if(node.getFileType() == DataTypeEnum.FILE){
+        if(node.getFileType() == MetadataType.FILE){
             new DataNodeQuerier().removeData(node);
         }
 
@@ -171,7 +173,6 @@ public class ParserRequestMetaData implements Parser {
 			
 			
 
-		return false;
 	}
 
 	/*
@@ -206,25 +207,23 @@ public class ParserRequestMetaData implements Parser {
         response.setMetadata(node);
 
         //If the file request is a dir.
-        if(node.getFileType() == DataTypeEnum.DIR){
+        if(node.getFileType() == MetadataType.DIR){
 
-            LinkedList<MetaDataRepositoryNode> children = new LinkedList<MetaDataRepositoryNode>();
+            LinkedList<MDFSProtocolMetaData> children = new LinkedList<MDFSProtocolMetaData>();
 
             //Fetching all the childern, if any of the dir an building the response
             MetaDataRepositoryNode[] nodes = metaDataRepo.getChildren(filePath);
             if(nodes != null){
-                for (MetaDataRepositoryNode child : nodes) {
-                    children.add(child);
+                for (MDFSProtocolMetaData child : nodes) {
+                    response.getMetadata().addChild(child);
                 }
-
-                response.getMetadata().setChildren(children);
             }
 
             session.setResponse(response);
             return true;
 
         //If node is a file, a the metadata and location of it is set as a response
-        }else if(node.getFileType() == DataTypeEnum.FILE){
+        }else if(node.getFileType() == MetadataType.FILE){
 
             session.setResponse(response);
             return true;
@@ -248,94 +247,88 @@ public class ParserRequestMetaData implements Parser {
 		MDFSProtocolMetaData metadata;
 		MDFSProtocolHeader response;
 		MetaDataRepository metaDataRepo;
-		try {
-			//Fetches the metadata that is to written along with the MetaDataRepository
-			metadata = session.getRequest().getMetadata();
-			metaDataRepo = MetaDataRepository.getInstance();
-			
-			//Creates the header for the response
-            response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
-			
-			String filePath = metadata.getPath();
 
-			//Fetches the node that are to be written to, in case it is to be overwritten
-			MetaDataRepositoryNode node = metaDataRepo.get(filePath);
-			
-			/*
-			 * File to write dose not exist previously
-			 */
-			if(node == null){
-				//Creates the new node with the metadata to be stored in the repository
-				node = new MetaDataRepositoryNode();
-				node.setFilePath(metadata.getPath());
-				node.setSize(metadata.getSize());
-				node.setOwner(metadata.getOwner());
-				node.setGroup(metadata.getGroup());
-				node.setCreated(metadata.getCreated());
-				node.setLastEdited(metadata.getLastEdited());
-                node.setLastTouched(metadata.getLastToutched());
-				
-				//Determines the the datatype
-				if(metadata.getType() == MetadataType.DIR){
-					node.setFileType(DataTypeEnum.DIR);
-				}else if(metadata.getType() == MetadataType.FILE){
-					node.setFileType(DataTypeEnum.FILE);
-					node.setStorageName(new FileNameOperations().createUniqName());
-				}else{
-					node.setFileType(null);
-				}
-				
-				//Adding new node to MetaDataRepository
-				if(!metaDataRepo.add(node.getKey(), node)){
-					//This happens if one is trying to add a file or dir of which the parent dirs dose not exist
-					response.setError("File could not be added to the FS, No such file or directory");
-					session.setResponse(response);
-				
-					return false;
-				}
-			//This in case of overwriting a file, we first check that is a file that we are trying to overwrite	
-			}else if(node.getFileType() == DataTypeEnum.FILE){
-				if(metadata.getType() != MetadataType.FILE){
-					response.setError("A file at that path already exist");
-					session.setResponse(response);
-				
-					return false;
-				}
+        //Fetches the metadata that is to written along with the MetaDataRepository
+        metadata = session.getRequest().getMetadata();
+        metaDataRepo = MetaDataRepository.getInstance();
 
-			//This in case of overwriting a dir, we first check that is a dir that we are trying to overwrite
-			}else if(node.getFileType() == DataTypeEnum.DIR){
-				if(metadata.getType() != MetadataType.DIR){
-					response.setError("A dir at that path already exist");
-					session.setResponse(response);
-					
-					return false;
-				}
-			/*
-			 * TODO: Bug would aper here in the case of overwriting the nested else if if statemets above 
-			 * 		 should be change to only one else if statement, teste must be done.
-			 * 	ex:	 else if(node.getFileType() == DataTypeEnum.DIR && !metaDataJson.getString("type").equals("dir"))   	
-			 */
-			}else{
-                node.setSize(metadata.getSize());
-                node.setOwner(metadata.getOwner());
-                node.setGroup(metadata.getGroup());
-                node.setCreated(metadata.getCreated());
-                node.setLastEdited(metadata.getLastEdited());
-                node.setLastTouched(metadata.getLastToutched());;
-				metaDataRepo.replace(node.getKey(), node);
-			}
-			
-			
-			response.setMetadata(node);
-			session.setResponse(response);
-			
-		} catch (JSONException e) {
-			e.printStackTrace();
-			setErrorMsg("Meta-data or path did not exist in Header");
-			return false;
-		}
+        //Creates the header for the response
+        response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
 
-		return true;
+        String filePath = metadata.getPath();
+
+        //Fetches the node that are to be written to, in case it is to be overwritten
+        MetaDataRepositoryNode node = metaDataRepo.get(filePath);
+
+        /*
+         * File to write dose not exist previously
+         */
+        if(node == null){
+            //Creates the new node with the metadata to be stored in the repository
+            node = new MetaDataRepositoryNode();
+            node.setFilePath(metadata.getPath());
+            node.setSize(metadata.getSize());
+            node.setOwner(metadata.getOwner());
+            node.setGroup(metadata.getGroup());
+            node.setPermission(metadata.getPermission());
+            node.setCreated(metadata.getCreated());
+            node.setLastEdited(metadata.getLastEdited());
+            node.setLastTouched(metadata.getLastTouched());
+
+
+            //Determines the the datatype
+            node.setFileType(metadata.getType());
+
+            if(metadata.getType() == MetadataType.FILE)
+                node.setStorageName(new FileNameOperations().createUniqName());
+
+
+            //Adding new node to MetaDataRepository
+            if(!metaDataRepo.add(node.getKey(), node)){
+                //This happens if one is trying to add a file or dir of which the parent dirs dose not exist
+                response.setError("File could not be added to the FS, No such file or directory");
+                session.setResponse(response);
+
+                return false;
+            }
+        //This in case of overwriting a file, we first check that is a file that we are trying to overwrite
+        }else if(node.getFileType() == MetadataType.FILE){
+            if(metadata.getType() != MetadataType.FILE){
+                response.setError("A file at that path already exist");
+                session.setResponse(response);
+
+                return false;
+            }
+
+        //This in case of overwriting a dir, we first check that is a dir that we are trying to overwrite
+        }else if(node.getFileType() == MetadataType.DIR){
+            if(metadata.getType() != MetadataType.DIR){
+                response.setError("A dir at that path already exist");
+                session.setResponse(response);
+
+                return false;
+            }
+        /*
+         * TODO: Bug would aper here in the case of overwriting the nested else if if statemets above
+         * 		 should be change to only one else if statement, teste must be done.
+         * 	ex:	 else if(node.getFileType() == DataTypeEnum.DIR && !metaDataJson.getString("type").equals("dir"))
+         */
+        }else{
+            node.setSize(metadata.getSize());
+            node.setOwner(metadata.getOwner());
+            node.setGroup(metadata.getGroup());
+            node.setCreated(metadata.getCreated());
+            node.setLastEdited(metadata.getLastEdited());
+            node.setLastTouched(metadata.getLastTouched());;
+            metaDataRepo.replace(node.getKey(), node);
+        }
+
+
+        response.setMetadata(node);
+        session.setResponse(response);
+
+
+        return true;
 		
 	}
 	

@@ -1,18 +1,17 @@
 package mdfs.namenode.tests;
 
 
-import mdfs.namenode.repositories.DataTypeEnum;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
-
 import mdfs.namenode.sql.MySQLUpdater;
+import mdfs.utils.io.protocol.enums.MetadataType;
 
 public class MySQLUpdater_Test {
 	public static void main(String[] args){
 		MetaDataRepositoryNode node = new MetaDataRepositoryNode();
 		node.setFilePath("test/node1");
 		node.setSize(123);
-		node.setFileType(DataTypeEnum.DIR);
+		node.setFileType(MetadataType.DIR);
 		node.setStorageName("124-124-124-1551332-23-6244724.v1");
 		node.setPermission((short)666);
 		node.setOwner("test1");
@@ -23,7 +22,7 @@ public class MySQLUpdater_Test {
 		MetaDataRepositoryNode node2 = new MetaDataRepositoryNode();
 		node2.setFilePath("test/node2");
 		node2.setSize(123);
-		node2.setFileType(DataTypeEnum.DIR);
+		node2.setFileType(MetadataType.DIR);
 		node2.setStorageName("124-124-124-1551332-23-6244724.v1");
 		node2.setPermission((short)666);
 		node2.setOwner("test1");

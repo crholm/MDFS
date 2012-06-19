@@ -34,6 +34,8 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
 
     public MDFSProtocolInfo(JSONObject jsonObject){
+
+        System.out.println("MDFSProtocolInfo --> " + jsonObject);
         if(jsonObject != null){
 
             setRemoved(jsonObject.optString("removed", null));
@@ -52,6 +54,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
                 if(array != null){
 
                     for(int i = 0; i < array.length(); i++){
+                        System.out.println("Adding datanode");
                         addDatanode(array.optString(i));
                     }
 
@@ -206,11 +209,16 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         return datanodes;
     }
     public String[] getDatanodesArray(String datanodes[]){
+        if(getDatanodesSize() == 0)
+            return null;
         datanodes = this.datanodes.toArray(datanodes);
         return datanodes;
     }
 
     public int getDatanodesSize() {
+        if(datanodes == null){
+            return 0;
+        }
         return datanodes.size();
     }
 
@@ -223,6 +231,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         if(datanodes == null)
             datanodes = new LinkedList<String>();
         datanodes.add(datanode);
+        setDatanodes(datanodes);
     }
 
 

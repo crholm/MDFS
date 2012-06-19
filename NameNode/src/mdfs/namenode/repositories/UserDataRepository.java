@@ -1,13 +1,14 @@
 package mdfs.namenode.repositories;
 
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import mdfs.namenode.sql.MySQLFetch;
 import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.Hashing;
 import mdfs.utils.SplayTree;
 import mdfs.utils.Time;
+import mdfs.utils.io.protocol.enums.MetadataType;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -67,7 +68,7 @@ public class UserDataRepository {
 				//Creates the home dir for the new user
 				MetaDataRepositoryNode homeDir = new MetaDataRepositoryNode();
 				homeDir.setFilePath("/" + node.getName());
-				homeDir.setFileType(DataTypeEnum.DIR);
+				homeDir.setFileType(MetadataType.DIR);
 				String time = Time.getTimeStamp();
 				homeDir.setCreated(time);
 				homeDir.setLastEdited(time);

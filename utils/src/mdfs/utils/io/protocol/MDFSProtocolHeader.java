@@ -37,6 +37,11 @@ public class MDFSProtocolHeader extends MDFSProtocol {
         this(new JSONObject(jsonString));
     }
     public MDFSProtocolHeader(JSONObject jsonObject){
+
+        ///////////////////////////////
+        System.out.println("MDFSProtocolHeader -> " + jsonObject);
+        ///////////////////////////////
+
         if(jsonObject != null){
 
             setFrom(jsonObject.optString("From", null));
@@ -57,7 +62,7 @@ public class MDFSProtocolHeader extends MDFSProtocol {
                 setMetadata(new MDFSProtocolMetaData(jsonObject.optJSONObject("Meta-data")));
 
             if(jsonObject.has("Info"))
-                setInfo(new MDFSProtocolInfo(jsonObject.optJSONObject("Meta-data")));
+                setInfo(new MDFSProtocolInfo(jsonObject.optJSONObject("Info")));
 
         }
     }
@@ -94,8 +99,8 @@ public class MDFSProtocolHeader extends MDFSProtocol {
             if(getPass() != null)
                 json.put("Pass", getPass());
 
-            if(getMetadata() != null);
-            json.put("Meta-data", getMetadata().toJSON());
+            if(getMetadata() != null)
+                json.put("Meta-data", getMetadata().toJSON());
 
             if(getInfo() != null)
                 json.put("Info", getInfo().toJSON());
