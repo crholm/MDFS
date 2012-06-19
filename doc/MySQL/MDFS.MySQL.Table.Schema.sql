@@ -2,7 +2,7 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-
+DROP  TABLE IF EXISTS `user-data`, `meta-data_data-node`, `data-node`, `meta-data`;
 
 -- Table structure for table `data-node`
 --
