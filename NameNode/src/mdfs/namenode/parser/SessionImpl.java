@@ -3,9 +3,9 @@ package mdfs.namenode.parser;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
-import org.json.JSONException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -57,7 +57,6 @@ public class SessionImpl implements Session{
 	/**
 	 * Parses a added JSON Request via a object Parser
 	 * @return false - if reqest is not set, or failing to parse request accordingly to MDFS Communication Protocol
-	 * @throws JSONException
 	 */
 	public boolean parseRequest() {
 		//Checks so that the request contains the fields To, From, Stage, Type and Mode
@@ -68,12 +67,22 @@ public class SessionImpl implements Session{
             parser = parserFactory.getParser(request.getStage(), request.getType(), request.getMode());
 
             //Parses the request and wraps the session in it.
-            if(!parser.parse(this)){
-                setStatus("error - Parsing went wrong");
+            if(parser == null){
+                setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, request.getType(), request.getMode(), " Parser for arguments did not exist"));
+                setStatus("error - Parser for arguments did not exist");
                 return false;
             }
+
+            if(!parser.parse(this)){
+                if(getResponse() == null)
+                    setResponse(MDFSProtocolHeader.createErrorHeader(request.getStage(), request.getType(), request.getMode(), "Parsing failed"));
+                setStatus("error - Parsing failed");
+                return false;
+            }
+
         }else{
-            setStatus("error - Stage, Mode or Type are missing");
+            setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, null, null, "Stage, Type and/or Mode was not provided"));
+            setStatus("error - Stage, Type and/or Mode was not provided");
             return false;
         }
 

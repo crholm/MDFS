@@ -3,6 +3,7 @@ package mdfs.datanode.parser;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
 
@@ -86,17 +87,28 @@ public class SessionImpl implements Session{
 			//Checks so that the field To contains the current data nods address
 
 				
-				//Creates a parser from given information 
-				parser = parserFactory.getParser(request.getStage(), request.getType(), request.getMode());
-				
-				//Parses the request and wraps the session in it.
-				if(!parser.parse(this)){
-					setStatus("error - Parsing failed");
-					return false;
-				}
+            //Creates a parser from given information
+            parser = parserFactory.getParser(request.getStage(), request.getType(), request.getMode());
+
+            if(parser == null){
+                setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, request.getType(), request.getMode(), " Parser for arguments did not exist"));
+                setStatus("error - Parser for arguments did not exist");
+                return false;
+            }
+
+            //Parses the request and wraps the session in it.
+            if(!parser.parse(this)){
+
+                if(getResponse() == null)
+                    setResponse(MDFSProtocolHeader.createErrorHeader(request.getStage(), request.getType(), request.getMode(), "Parsing failed"));
+                setStatus("error - Parsing failed");
+                return false;
+
+            }
 
 		}else{
-			setStatus("error - Requets, Stage, Mode or Type is missing");
+            setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, null, null, "Stage, Type and/or Mode was not provided"));
+			setStatus("error - Stage, Type and/or Mode was not provided");
 			return false;
 		}
 		

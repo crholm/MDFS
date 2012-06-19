@@ -5,6 +5,7 @@ import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.parser.Session;
 import org.json.JSONException;
 
@@ -59,11 +60,11 @@ public class ConnectionSheppard implements Runnable{
 		try {
 			Verbose.print("Parsing request...", this, Config.getInt("verbose")-2);
 
-           System.out.print("String request ->" + this.request);
+
 
             MDFSProtocolHeader h = new MDFSProtocolHeader(this.request);
 
-            System.out.println("Header request ->" + h);
+
 
            	session.setRequest(h);
 			session.setInputStreamFromRequest(in);
@@ -74,8 +75,7 @@ public class ConnectionSheppard implements Runnable{
 		
 			
 		} catch (JSONException e) {
-			Verbose.print("Error parsing request", this, Config.getInt("verbose")+1);
-			e.printStackTrace();
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, null, null, "Header received was not in JSON format."));
 		} 
 		
 	}
@@ -104,12 +104,18 @@ public class ConnectionSheppard implements Runnable{
 			//The cycle which all communication takes
 			getRequest();
 			sendResponse();
-			in.close();
-			out.close();
-			connection.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}
+		}finally {
+            try {
+                in.close();
+                out.close();
+                connection.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 	}
 
 }

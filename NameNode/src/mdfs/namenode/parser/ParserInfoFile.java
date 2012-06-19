@@ -10,6 +10,8 @@ import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.io.protocol.enums.Overwrite;
+import mdfs.utils.io.protocol.enums.Stage;
+import mdfs.utils.io.protocol.enums.Type;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
 
@@ -33,6 +35,7 @@ public class ParserInfoFile implements Parser {
 		if(mode == Mode.WRITE){
 			return parseWrite();
 		}
+        session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, session.getRequest().getType(), mode, "Parser for mode: " + mode + " dose not exist"));
 		return false;
 	}
 	
@@ -44,6 +47,16 @@ public class ParserInfoFile implements Parser {
         MDFSProtocolHeader request = session.getRequest();
         MDFSProtocolInfo info = request.getInfo();
 
+        //Checks that all fields needed are present
+        if(info == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "JSON object Info dose not exist in header"));
+            return false;
+        }else if(info.getPath() == null || info.getHost() == null || info.getPort() == null || info.getOverwrite() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "path, host, port and/or overwrite dose not exist in Info field"));
+            return false;
+        }
+
+
         String filePath = info.getPath();
         String host = info.getHost();
         String port = info.getPort();
@@ -53,13 +66,18 @@ public class ParserInfoFile implements Parser {
         Verbose.print("parseWrite -> File: " + filePath + " Host: " + host + " Port: " + port, this, Config.getInt("verbose")-2);
         //Fetches the MetaDataRepositoryNode that the update of information this is regarding
         MetaDataRepositoryNode node = MetaDataRepository.getInstance().get(filePath);
+
+
+        //Checks that the node exist in FS
         if(node == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "File dose not exist in file system"));
             return false;
         }
 
         //Finds the datanode that are the raw data now is stored on
         DataNodeInfoRepository dataNodes = DataNodeInfoRepository.getInstance();
         DataNodeInfoRepositoryNode dataNode = dataNodes.get(host, port);
+
 
         /*
          * TODO: maby make sure that the correct DataNodes are informed of overwrite.

@@ -32,6 +32,16 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     private MDFSProtocolInfo info;
 
 
+    public static MDFSProtocolHeader createErrorHeader(Stage stage, Type type, Mode mode, String error){
+        MDFSProtocolHeader header = new MDFSProtocolHeader();
+        header.setStage(stage);
+        header.setType(type);
+        header.setMode(mode);
+        header.setError(error);
+        return header;
+    }
+
+
     public MDFSProtocolHeader(){}
     public MDFSProtocolHeader(String jsonString) throws JSONException {
         this(new JSONObject(jsonString));
@@ -39,7 +49,7 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     public MDFSProtocolHeader(JSONObject jsonObject){
 
         ///////////////////////////////
-        System.out.println("MDFSProtocolHeader -> " + jsonObject);
+        // System.out.println("MDFSProtocolHeader -> " + jsonObject);
         ///////////////////////////////
 
         if(jsonObject != null){

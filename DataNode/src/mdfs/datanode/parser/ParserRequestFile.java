@@ -65,17 +65,18 @@ public class ParserRequestFile implements Parser{
 		}else if(mode == Mode.REMOVE){
 			return parseRemove();
 		}else if(mode == Mode.INFO){
-			
+			return false; // TODO Implement
 		}else if(mode == Mode.CASCADE){
 			return parseCascade();
 		}else{
+
+            //Creates a error response
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Mode: " + mode + " is an non-valid mode"));
+
 			setErrorMsg("None valid Mode in Header");
 			return false;
 		}		
-		
-		setErrorMsg("Some thing went wrong parsing Header");
-		return false;
-		
+
 	}
 
 	/**
@@ -89,6 +90,21 @@ public class ParserRequestFile implements Parser{
 
         //Retrieves metadata information about the file
         MDFSProtocolMetaData metadata = request.getMetadata();
+
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation().getName() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+
+
         //Gets the loaction information
         MDFSProtocolLocation location = metadata.getLocation();
 
@@ -105,11 +121,11 @@ public class ParserRequestFile implements Parser{
         boolean overwrite = file.exists();
 
         //Receives and saves the file to the local file system
-        socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
+        boolean written = socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
 
         //Creates information about the file and updates the Name Node with it
         MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setWritten(EventStatus.SUCCESSFUL);
+        info.setWritten(written ? EventStatus.SUCCESSFUL : EventStatus.FAILED);
         info.setOverwrite(overwrite ? Overwrite.TRUE : Overwrite.FALSE);
         info.setPath(metadata.getPath());
         info.setName(fileName);
@@ -136,6 +152,22 @@ public class ParserRequestFile implements Parser{
 
         //Figurers out what file is to be removed
         MDFSProtocolMetaData metadata = request.getMetadata();
+
+
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation().getName() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+
+
         String fileName = metadata.getLocation().getName();
         String fullPath = nameTranslation.translateFileNameToFullPath(fileName);
 
@@ -157,28 +189,41 @@ public class ParserRequestFile implements Parser{
 		//Get request and builds a basic response
 		MDFSProtocolHeader request = session.getRequest();
 
-        MDFSProtocolHeader response = new MDFSProtocolHeader();
-        response.setStage(Stage.RESPONSE);
-        response.setType(Type.FILE);
-        response.setMode(mode);
 
-        //Add metadata to the response
-        response.setMetadata(request.getMetadata());
+        if(request.getMetadata() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
+            return false;
+
+        }else if(request.getMetadata().getLocation() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
+            return false;
+
+        }else if(request.getMetadata().getLocation().getName() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
 
 
         //Figuers out what file to send back
         String fileName = request.getMetadata().getLocation().getName();
         File file = new File(nameTranslation.translateFileNameToFullPath(fileName));
 
-        //Sets the response
-        session.setResponse(response);
+
 
         //If the file exists and are to be sent othewise an error is set in the response
         if(file.exists()){
+            //Sets the response
+            MDFSProtocolHeader response = new MDFSProtocolHeader();
+            response.setStage(Stage.RESPONSE);
+            response.setType(Type.FILE);
+            response.setMode(mode);
+            response.setMetadata(request.getMetadata());
+
+            session.setResponse(response);
             session.setFileForResponse(file);
             return true;
         }else{
-            response.setError("File dose not exist");
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "File dose not exist on DataNode local filesystem"));
             return false;
         }
 			
@@ -197,15 +242,29 @@ public class ParserRequestFile implements Parser{
 		//Get request and builds a basic response
 		MDFSProtocolHeader request = session.getRequest();
 
-        MDFSProtocolHeader response = new MDFSProtocolHeader();
-        response.setStage(Stage.RESPONSE);
-        response.setType(Type.FILE);
-        response.setMode(mode);
-		
 
-			
         //Gets the meta data
         MDFSProtocolMetaData metadata = request.getMetadata();
+
+
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
+            return false;
+
+        }else if(metadata.getPath() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+
+        }else if(metadata.getLocation().getName() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+
+
 
         //Figures out the path to the file in the local file system
         String fileName = metadata.getLocation().getName();
@@ -216,16 +275,15 @@ public class ParserRequestFile implements Parser{
         File file = new File(fileFullPath);
         File dir = new File(fileDir);
         dir.mkdirs();
+
         boolean overwrite = file.exists();
 
-        //Writing the file to the local FS from stream
-        // TODO Implement check so that file was written
         Verbose.print("Reciving file...", this, Config.getInt("verbose")-2);
-        socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
+        boolean written = socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
 
         //Creates info about the file that was just written
         MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setWritten(EventStatus.SUCCESSFUL);
+        info.setWritten(written ? EventStatus.SUCCESSFUL : EventStatus.FAILED);
         info.setOverwrite( overwrite ? Overwrite.TRUE : Overwrite.FALSE);
 
         info.setPath(metadata.getPath());
@@ -241,7 +299,6 @@ public class ParserRequestFile implements Parser{
 
             metadata.getLocation().addHost(Config.getString("address") + ":" + Config.getString("port"));
 
-
             //Only informs the name node if it is a new file, otherwise it already have the information
             new NameNodeInformer().newDataLocation(Type.FILE, mode, info);
             new Replicator().newFile(metadata);
@@ -249,6 +306,10 @@ public class ParserRequestFile implements Parser{
         }
 
         //Updates the response for the client
+        MDFSProtocolHeader response = new MDFSProtocolHeader();
+        response.setStage(Stage.RESPONSE);
+        response.setType(Type.FILE);
+        response.setMode(mode);
         response.setMetadata(metadata);
         response.setInfo(info);
         session.setResponse(response);

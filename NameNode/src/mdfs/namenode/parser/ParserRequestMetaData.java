@@ -74,21 +74,18 @@ public class ParserRequestMetaData implements Parser {
         pass = session.getRequest().getPass();
         //Checks so that user credentials are provided
         if(user == null || pass == null){
-            MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
-            response.setError("No full user or password was given in request");
-            session.setResponse(response);
-
+            //Creates Error Response
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "No full user or password was given in request" ));
             setErrorMsg("User or Pass was not included in Header");
+
             return false;
         }
         //Checks so that the user credentials are correct
         if(!authUser(user, pass)){
             //Creates a error response
-            MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
-            response.setError("In valid user or password");
-            session.setResponse(response);
-
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "In valid user or password"));
             setErrorMsg("User or pass was wrong");
+
             return false;
         }
 
@@ -104,9 +101,9 @@ public class ParserRequestMetaData implements Parser {
             return parseInfo();
         }else{
             //Creates a error response
-            MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
-            response.setError("Mode: \"" + mode + "\" is an unvalid mode");
-            session.setResponse(response);
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Mode: " + mode + " is an non-valid mode"));
+            setErrorMsg("Mode: " + mode + " is an non-valid mode");
+
             return false;
         }
 		
@@ -120,22 +117,32 @@ public class ParserRequestMetaData implements Parser {
 	 */
 	private boolean parseRemove() {
 		MDFSProtocolMetaData metadata;
-		MDFSProtocolHeader response;
 		MetaDataRepository metaDataRepo = MetaDataRepository.getInstance();
-		
+
 
         //Retrieves the Meta-data in the request that the request is regarding
         metadata = session.getRequest().getMetadata();
-        response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
+
+
+
+        // Checks that all parameters needed are provided
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
+            return false;
+        }else if(metadata.getPath() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
+
 
         //Fetches the full path to the file in MDFS
         String path = metadata.getPath();
 
         //Checks so that the file/dir dose not have children
         if(metaDataRepo.hasChildren(path)){
+
             //Creates a error response
-            response.setError("failed to remove `" + path +"': Directory not empty ");
-            session.setResponse(response);
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode,"failed to remove " + path +": Directory not empty "));
             return false;
         }
 
@@ -145,9 +152,9 @@ public class ParserRequestMetaData implements Parser {
 
         //If node==null the file did not exist.
         if(node == null){
+
             //Creates a error response
-            response.setError(" cannot remove `" + path +"': No such file or directory");
-            session.setResponse(response);
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " cannot remove " + path +": No such file or directory"));
             return false;
         }
 
@@ -160,13 +167,10 @@ public class ParserRequestMetaData implements Parser {
         }
 
         //Creates a response for the removal
-        // TODO Implement metadata node as extention oc MDFSProtocolMetadata
+
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);;
+        response.getInfo().setRemoved(EventStatus.SUCCESSFUL);
         response.setMetadata(node);
-
-        MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setRemoved(EventStatus.SUCCESSFUL);
-
-        response.setInfo(info);
 
         session.setResponse(response);
         return true;
@@ -182,16 +186,22 @@ public class ParserRequestMetaData implements Parser {
 	 */
 	private boolean parseRead() {
 		MDFSProtocolMetaData metadata;
-		MDFSProtocolHeader response;
+
 		MetaDataRepository metaDataRepo;
 		
-
-        //Creating a response header
-        response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
 
         //Retriving nessesary information from the request
         metadata = session.getRequest().getMetadata();
         metaDataRepo = MetaDataRepository.getInstance();
+
+        // Checks that all parameters needed are provided
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
+            return false;
+        }else if(metadata.getPath() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
 
         //Retriving the node that are to be read
         String filePath = metadata.getPath();
@@ -199,10 +209,14 @@ public class ParserRequestMetaData implements Parser {
 
         //if the node==null it did not exist and an error us sent as a response
         if(node == null){
-            response.setError("No such file or directory");
-            session.setResponse(response);
+            //Creates a error response
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " cannot read " + filePath +": No such file or directory"));
             return false;
         }
+
+
+        //Creating a response header
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
 
         response.setMetadata(node);
 
@@ -227,10 +241,10 @@ public class ParserRequestMetaData implements Parser {
 
             session.setResponse(response);
             return true;
+
         }else{
-            response.setError("Data type is not defined");
-            response.setMetadata(null);
-            session.setResponse(response);
+
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> type, Data type is not defined"));
             return false;
         }
 
@@ -245,15 +259,22 @@ public class ParserRequestMetaData implements Parser {
 	 */
 	private boolean parseWrite(){
 		MDFSProtocolMetaData metadata;
-		MDFSProtocolHeader response;
 		MetaDataRepository metaDataRepo;
 
         //Fetches the metadata that is to written along with the MetaDataRepository
         metadata = session.getRequest().getMetadata();
         metaDataRepo = MetaDataRepository.getInstance();
 
-        //Creates the header for the response
-        response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
+
+        // Checks that all parameters needed are provided
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
+            return false;
+        }else if(metadata.getPath() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
+
 
         String filePath = metadata.getPath();
 
@@ -264,6 +285,8 @@ public class ParserRequestMetaData implements Parser {
          * File to write dose not exist previously
          */
         if(node == null){
+
+            //TODO Check that all values are present in MetaData from Client
             //Creates the new node with the metadata to be stored in the repository
             node = new MetaDataRepositoryNode();
             node.setFilePath(metadata.getPath());
@@ -274,10 +297,8 @@ public class ParserRequestMetaData implements Parser {
             node.setCreated(metadata.getCreated());
             node.setLastEdited(metadata.getLastEdited());
             node.setLastTouched(metadata.getLastTouched());
-
-
-            //Determines the the datatype
             node.setFileType(metadata.getType());
+
 
             if(metadata.getType() == MetadataType.FILE)
                 node.setStorageName(new FileNameOperations().createUniqName());
@@ -286,16 +307,14 @@ public class ParserRequestMetaData implements Parser {
             //Adding new node to MetaDataRepository
             if(!metaDataRepo.add(node.getKey(), node)){
                 //This happens if one is trying to add a file or dir of which the parent dirs dose not exist
-                response.setError("File could not be added to the FS, No such file or directory");
-                session.setResponse(response);
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "File could not be added to the FS, No such file or directory"));
 
                 return false;
             }
         //This in case of overwriting a file, we first check that is a file that we are trying to overwrite
         }else if(node.getFileType() == MetadataType.FILE){
             if(metadata.getType() != MetadataType.FILE){
-                response.setError("A file at that path already exist");
-                session.setResponse(response);
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a FILE"));
 
                 return false;
             }
@@ -303,8 +322,7 @@ public class ParserRequestMetaData implements Parser {
         //This in case of overwriting a dir, we first check that is a dir that we are trying to overwrite
         }else if(node.getFileType() == MetadataType.DIR){
             if(metadata.getType() != MetadataType.DIR){
-                response.setError("A dir at that path already exist");
-                session.setResponse(response);
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a DIR"));
 
                 return false;
             }
@@ -323,10 +341,10 @@ public class ParserRequestMetaData implements Parser {
             metaDataRepo.replace(node.getKey(), node);
         }
 
-
+        //Creates the header for the response
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
         response.setMetadata(node);
         session.setResponse(response);
-
 
         return true;
 		
@@ -339,13 +357,23 @@ public class ParserRequestMetaData implements Parser {
 	 */
 	private boolean parseInfo(){
 		MDFSProtocolMetaData metadata;
-		MDFSProtocolHeader response;
 		MetaDataRepositoryNode node;
 		
 
         metadata = session.getRequest().getMetadata();
+
+        // Checks that all parameters needed are provided
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
+            return false;
+        }else if(metadata.getPath() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
+
         node = MetaDataRepository.getInstance().get( metadata.getPath() );
-        response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
+
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
         response.setMetadata(node);
         session.setResponse(response);
 

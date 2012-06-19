@@ -418,9 +418,9 @@ public class FileQueryImpl implements FileQuery{
             MDFSProtocolHeader response = null;
             try {
                 String s = socketFunctions.receiveText(nameNodeSocket);
-                System.out.println("FileQueryImpl1 -->" + s);
+
                 response = new MDFSProtocolHeader(s);
-                System.out.println("FileQueryImpl2 -->" + response);
+
             } catch (JSONException e) {
                 e.printStackTrace();
                 return false;

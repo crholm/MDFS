@@ -1,12 +1,11 @@
 package mdfs.client.tests;
 
+import mdfs.client.api.FileQuery;
+import mdfs.client.api.FileQueryImpl;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-
-import mdfs.client.api.FileQuery;
-import mdfs.client.api.FileQueryImpl;
 
 public class MDFSBenchmark implements Runnable{
 	public static long end;
@@ -54,12 +53,14 @@ public class MDFSBenchmark implements Runnable{
 			}
 		}
 		System.out.println("Time used: " + (end-start)/1000 + "s " + (end-start)%1000 + "ms\n" );
-		
+
+
 		System.out.println("Removing 10000 files, no threads");
 		start = System.currentTimeMillis();
 		f.rm("/test1/benchmark", "r");
 		long stop = System.currentTimeMillis();
 		System.out.println("Time used: " + (stop-start)/1000 + "s " + (stop-start)%1000 + "ms\n");
+
 	}
 
 

@@ -5,6 +5,7 @@ import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.parser.Session;
 import org.json.JSONException;
 
@@ -58,13 +59,7 @@ public class ConnectionSheppard implements Runnable{
 
             String input = socketFunctions.receiveText(connection);
 
-         //   System.out.println("--> " + input);
-
             this.request = new MDFSProtocolHeader(input);
-
-         //   System.out.println("--> " + this.request.getStage());
-         //   System.out.println("--> " + this.request.getType());
-         //   System.out.println("--> " + this.request.getMode());
 
 
 			Verbose.print("Parsing request", this, Config.getInt("verbose")-6);
@@ -75,7 +70,9 @@ public class ConnectionSheppard implements Runnable{
 			Verbose.print("Parsing done.", this, Config.getInt("verbose")-6);
 			
 		} catch (JSONException e) {
-			e.printStackTrace();
+
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, null, null, "Header received was not in JSON format."));
+
 		} 		
 	}
 	
@@ -89,15 +86,22 @@ public class ConnectionSheppard implements Runnable{
 	
 	@Override
 	public void run(){
-		try {
-			getRequest();
-			sendResponse();
-			in.close();
-			out.close();
-			connection.close();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+        try {
+            //The cycle which all communication takes
+            getRequest();
+            sendResponse();
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }finally {
+            try {
+                in.close();
+                out.close();
+                connection.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
 	}
 
 }

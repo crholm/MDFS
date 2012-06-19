@@ -1,18 +1,18 @@
 package mdfs.client.tests.junit;
 
-import static org.junit.Assert.*;
+import mdfs.client.api.FileQuery;
+import mdfs.client.api.FileQueryImpl;
+import mdfs.utils.HashTypeEnum;
+import mdfs.utils.Hashing;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import mdfs.client.api.FileQuery;
-import mdfs.client.api.FileQueryImpl;
-import mdfs.utils.HashTypeEnum;
-import mdfs.utils.Hashing;
-
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class MDFSIntegrationTest {
 
@@ -28,6 +28,10 @@ public class MDFSIntegrationTest {
 		FileQuery fq = new FileQueryImpl("test1", "test1");
 		assertTrue(fq.mkdir("rm"));
 		assertTrue(fq.mkdir("/test1/rm1"));
+
+        for(int i = 0; i < 10; i++){
+            assertTrue(fq.mkdir("/test1/" + i));
+        }
 	}
 	
 	@Test
@@ -94,6 +98,10 @@ public class MDFSIntegrationTest {
 		assertTrue(fq.rm("/test1/rm1/1", null));
 		assertTrue(fq.rm("/test1/rm1", "r"));
 		assertTrue(fq.rm("/test1/rm", "r"));
+
+        for(int i = 0; i < 10; i++){
+            assertTrue(fq.rm("/test1/" + i, "r"));
+        }
 		
 	}
 
@@ -115,7 +123,9 @@ public class MDFSIntegrationTest {
 			assertTrue(fq.put(file,"/test1/testFile1", null));
 		
 			File file2 =  File.createTempFile("new", ".junitTest");
-			
+
+            Thread.sleep(200);
+
 			assertTrue(fq.get("/test1/testFile1", file2, null));
 			
 			
@@ -129,15 +139,18 @@ public class MDFSIntegrationTest {
 			String newFileContentHash = Hashing.hash(HashTypeEnum.SHA1, newFileContent);
 			
 			assertTrue( testStringHash.equals(newFileContentHash)   );
-			
+
+            assertTrue(fq.rm("/test1/testFile1", null));
 			file2.delete();
 			file.delete();
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
-		
-	}
+		} catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+    }
 
 	@Test
 	public void testPutFileString() {

@@ -35,7 +35,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
     public MDFSProtocolInfo(JSONObject jsonObject){
 
-        System.out.println("MDFSProtocolInfo --> " + jsonObject);
+
         if(jsonObject != null){
 
             setRemoved(jsonObject.optString("removed", null));
@@ -54,7 +54,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
                 if(array != null){
 
                     for(int i = 0; i < array.length(); i++){
-                        System.out.println("Adding datanode");
+
                         addDatanode(array.optString(i));
                     }
 
