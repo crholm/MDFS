@@ -35,7 +35,7 @@ public class ParserInfoFile implements Parser {
 		//When the Mode = Write
 		switch (mode){
             case WRITE:
-            case WRITESTREAM: //TODO Implement updating of size/length of file
+            case WRITESTREAM:
                 return parseWrite();
             default:
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, session.getRequest().getType(), mode, "Parser for mode: " + mode + " dose not exist"));

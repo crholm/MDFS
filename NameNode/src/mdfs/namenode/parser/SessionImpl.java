@@ -109,23 +109,19 @@ public class SessionImpl implements Session{
 	
 	@Override
 	public InputStream getInputStreamFromRequest() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	@Override
 	public void setInputStreamFromRequest(InputStream inputStream) {
-		// TODO Auto-generated method stub
-		
+
 	}
 	@Override
 	public File getFileForResponse() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	@Override
 	public void setFileForResponse(File file) {
-		// TODO Auto-generated method stub
-		
+
 	}
 	
 	

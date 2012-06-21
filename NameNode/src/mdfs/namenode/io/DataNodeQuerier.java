@@ -37,14 +37,9 @@ public class DataNodeQuerier implements Runnable{
         query.setType(Type.FILE);
         query.setMode(Mode.REMOVE);
 
-        //TODO implemnt MetaDataRepositoryNode as extening MDFSProtocolMetadata
-        //query.put("Meta-data", node.toJSON());
         query.setMetadata(node);
 
 
-			
-
-		
 		//Starts the thread that will send the query
 		new Thread(this).start();
 	}

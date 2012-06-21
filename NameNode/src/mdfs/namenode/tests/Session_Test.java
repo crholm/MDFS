@@ -22,7 +22,7 @@ public class Session_Test {
 		try {
 			session.parseRequest();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		*/
@@ -40,7 +40,7 @@ public class Session_Test {
 		try {
 			session.parseRequest();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		System.out.println("Response json data:\n" + session.getResponse());

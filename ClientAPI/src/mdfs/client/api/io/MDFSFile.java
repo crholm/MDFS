@@ -12,13 +12,16 @@ import java.io.File;
  * @author Rasmus Holm
  * @version 1.0
  */
-public class MDFSFile{
+public class MDFSFile {//extends File{
 
     public String path;
+    public String user;
+    public String pass;
 
     public MDFSFile(String path, String user, String pass){
-
-
+        this.path = path;
+        this.pass = pass;
+        this.user = user;
     }
 
 

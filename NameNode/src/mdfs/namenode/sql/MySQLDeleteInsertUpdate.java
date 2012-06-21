@@ -1,7 +1,6 @@
 package mdfs.namenode.sql;
 
 import java.sql.Connection;
-
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -28,7 +27,6 @@ public class MySQLDeleteInsertUpdate{
 			s.executeUpdate(query);
 			s.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 			 
