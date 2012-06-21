@@ -5,10 +5,7 @@ import mdfs.datanode.io.Replicator;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.SocketFunctions;
-import mdfs.utils.io.protocol.MDFSProtocolHeader;
-import mdfs.utils.io.protocol.MDFSProtocolInfo;
-import mdfs.utils.io.protocol.MDFSProtocolLocation;
-import mdfs.utils.io.protocol.MDFSProtocolMetaData;
+import mdfs.utils.io.protocol.*;
 import mdfs.utils.io.protocol.enums.*;
 import mdfs.utils.parser.FileNameOperations;
 import mdfs.utils.parser.Parser;
@@ -58,28 +55,36 @@ public class ParserRequestFile implements Parser{
 		this.session = session;
 
 		//Selects what "sub-parser" to use
-		if(mode == Mode.WRITE){
-			return parseWrite();	
-		}else if(mode == Mode.READ){
-			return parseRead();
-		}else if(mode == Mode.REMOVE){
-			return parseRemove();
-		}else if(mode == Mode.INFO){
-			return false; // TODO Implement
-		}else if(mode == Mode.CASCADE){
-			return parseCascade();
-		}else{
 
-            //Creates a error response
-            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Mode: " + mode + " is an non-valid mode"));
+        switch (mode){
 
-			setErrorMsg("None valid Mode in Header");
-			return false;
-		}		
+            case WRITE:
+            case WRITESTREAM:
+                return parseWrite();
+
+            case READ:
+                return parseRead();
+
+            case REMOVE:
+                return parseRemove();
+
+            case CASCADE:
+                return parseCascade();
+
+            case INFO:
+            default:
+                //Creates a error response
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Mode: " + mode + " is an non-valid mode"));
+
+                setErrorMsg("None valid Mode in Header");
+                return false;
+        }
 
 	}
 
-	/**
+
+
+    /**
 	 * Parsing in the cases of Cascading, a file is replicating from one datanode to this one.
 	 * @return true if successfully receiving a cascading file
 	 */
@@ -279,23 +284,47 @@ public class ParserRequestFile implements Parser{
         boolean overwrite = file.exists();
 
         Verbose.print("Reciving file...", this, Config.getInt("verbose")-2);
-        boolean written = socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
+
+
+
 
         //Creates info about the file that was just written
         MDFSProtocolInfo info = new MDFSProtocolInfo();
-        info.setWritten(written ? EventStatus.SUCCESSFUL : EventStatus.FAILED);
         info.setOverwrite( overwrite ? Overwrite.TRUE : Overwrite.FALSE);
-
         info.setPath(metadata.getPath());
         info.setName(fileName);
         info.setHost(Config.getString("address"));
         info.setPort(Config.getString("port"));
 
+        boolean written = false;
+
+        if(mode == Mode.WRITE){
+           written = socketFunctions.receiveFile(session.getInputStreamFromRequest(), file);
+
+        }else if(mode == Mode.WRITESTREAM){
+            long length = socketFunctions.receiveFileFromStream(session.getInputStreamFromRequest(), file);
+            info.setLength(length);
+            metadata.setSize(length);
+
+            written = length == -1 ? false : true;
+
+        }
+
+        info.setWritten(written ? EventStatus.SUCCESSFUL : EventStatus.FAILED);
+
+
+
+        //Updates the response for the client
+        MDFSProtocolHeader response = new MDFSProtocolHeader();
 
         // Replicates the file to other data nodes and informs the Name Node if necessary
-        if(overwrite){
+        if(overwrite && written){
             new Replicator().overwriteFile(metadata);
-        }else{
+
+            if(mode == Mode.WRITESTREAM)
+                new NameNodeInformer().newDataLocation(Type.FILE, mode, info);
+
+        }else if(!overwrite && written){
 
             metadata.getLocation().addHost(Config.getString("address") + ":" + Config.getString("port"));
 
@@ -303,10 +332,14 @@ public class ParserRequestFile implements Parser{
             new NameNodeInformer().newDataLocation(Type.FILE, mode, info);
             new Replicator().newFile(metadata);
 
+        }else{
+
+            response.setErrorCode(MDFSErrorCode.EIO);
+            response.setError("I/O Error, failed to write data");
         }
 
-        //Updates the response for the client
-        MDFSProtocolHeader response = new MDFSProtocolHeader();
+
+
         response.setStage(Stage.RESPONSE);
         response.setType(Type.FILE);
         response.setMode(mode);
@@ -315,8 +348,7 @@ public class ParserRequestFile implements Parser{
         session.setResponse(response);
 
         return true;
-			
-
 	}
+
 
 }

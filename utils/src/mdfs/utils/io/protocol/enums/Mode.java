@@ -8,6 +8,6 @@ package mdfs.utils.io.protocol.enums;
  * @version 1.0
  */
 public enum Mode {
-    WRITE,READ,REMOVE,EDIT,INFO,CASCADE;
+    WRITE,WRITESTREAM,READ,REMOVE,EDIT,INFO,CASCADE;
 
 }

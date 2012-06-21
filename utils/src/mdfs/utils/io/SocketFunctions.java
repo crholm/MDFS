@@ -1,18 +1,11 @@
 package mdfs.utils.io;
 
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import mdfs.utils.ArrayUtils;
 
-import java.io.OutputStream;
-
+import java.io.*;
 import java.net.Socket;
 import java.nio.charset.Charset;
-
-import mdfs.utils.ArrayUtils;
 
 
 /**
@@ -190,9 +183,8 @@ public class SocketFunctions {
 		try {
 			
 			//Reading 8 bytes overhead from stream in to a long that is how many bytes is expected
-			byte[] b = new byte[8];
-			in.read(b, 0, 8);
-			long length = ArrayUtils.byteArrayToLong(b);
+
+			long length = prepareFileInputStream(in);
 			
 			
 			OutputStream out = new FileOutputStream(targetFile, false);
@@ -207,7 +199,8 @@ public class SocketFunctions {
 			}
 			len = in.read(buf, 0, (int)(length%chunkSize));
 			out.write(buf,0,len);
-			
+
+            out.close();
 			return true;
 		} catch (IOException e) {
 			
@@ -215,5 +208,48 @@ public class SocketFunctions {
 			return false;
 		}
 	}
+
+    /**
+     * Writes a InputStream to a file.
+     * @param in the InputStream that will be written to targetFile
+     * @param targetFile the targetFile that the InputStream is written to
+     * @return the number of bytes written from InputStream to targetFile
+     */
+    public long receiveFileFromStream(InputStream in, File targetFile){
+
+        long length = 0;
+        try {
+
+            OutputStream out = new FileOutputStream(targetFile, false);
+            byte buf[] = new byte[chunkSize];
+            int len;
+
+            while((len = in.read(buf)) != -1){
+                out.write(buf,0 ,len);
+                length += len;
+            }
+            out.close();
+            return length;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
+     *
+     * @param in
+     * @return number of byes that are expected.
+     * @throws IOException
+     */
+    public long prepareFileInputStream(InputStream in) throws IOException{
+        //Reading 8 bytes overhead from stream in to a long that is how many bytes is expected
+        byte[] b = new byte[8];
+        in.read(b, 0, 8);
+        return ArrayUtils.byteArrayToLong(b);
+    }
 	
 }

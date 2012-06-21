@@ -25,6 +25,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
     private String name;
     private String host;
     private String port;
+    private long length = -1;
     private LinkedList<String> datanodes;
 
     public MDFSProtocolInfo(){}
@@ -48,6 +49,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
             setName(jsonObject.optString("name", null));
             setHost(jsonObject.optString("host", null));
             setPort(jsonObject.optString("port", null));
+            setLength(jsonObject.optLong("length", -1));
 
             if(jsonObject.has("datanodes")){
                 JSONArray array = jsonObject.optJSONArray("datanodes");
@@ -98,6 +100,10 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
             if(getPort() != null)
                 json.put("port", getPort());
+
+            if(getLength() != -1)
+                json.put("length", getLength());
+
 
             if(getDatanodes() != null)
                     json.put("datanodes", new JSONArray(getDatanodes()));
@@ -156,6 +162,14 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         }catch (Exception e){
             this.overwrite = null;
         }
+    }
+
+    public long getLength() {
+        return length;
+    }
+
+    public void setLength(long length) {
+        this.length = length;
     }
 
     public EventStatus getRemoved() {

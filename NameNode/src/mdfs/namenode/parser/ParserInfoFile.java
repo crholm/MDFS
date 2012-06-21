@@ -4,6 +4,7 @@ import mdfs.namenode.repositories.DataNodeInfoRepository;
 import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
+import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.Config;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
@@ -32,11 +33,16 @@ public class ParserInfoFile implements Parser {
 	public boolean parse(Session session) {
 		this.session = session;
 		//When the Mode = Write
-		if(mode == Mode.WRITE){
-			return parseWrite();
-		}
-        session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, session.getRequest().getType(), mode, "Parser for mode: " + mode + " dose not exist"));
-		return false;
+		switch (mode){
+            case WRITE:
+            case WRITESTREAM: //TODO Implement updating of size/length of file
+                return parseWrite();
+            default:
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, session.getRequest().getType(), mode, "Parser for mode: " + mode + " dose not exist"));
+                return false;
+
+        }
+
 	}
 	
 	/*
@@ -87,6 +93,11 @@ public class ParserInfoFile implements Parser {
         //Adds the new location of the raw data to the MetaDataRepositoryNode
         if(!overwrite)
             node.addLocation(dataNode);
+
+        if(info.getLength() != -1){
+            node.setSize(info.getLength());
+            MySQLUpdater.getInstance().updateMetaData(node);
+        }
 
         return true;
 

@@ -24,6 +24,7 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     private Mode mode;
 
     private String error;
+    private int errorCode = -1;
 
     private String user;
     private String pass;
@@ -48,9 +49,6 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     }
     public MDFSProtocolHeader(JSONObject jsonObject){
 
-        ///////////////////////////////
-        // System.out.println("MDFSProtocolHeader -> " + jsonObject);
-        ///////////////////////////////
 
         if(jsonObject != null){
 
@@ -64,6 +62,7 @@ public class MDFSProtocolHeader extends MDFSProtocol {
 
 
             setError(jsonObject.optString("Error", null));
+            setErrorCode(jsonObject.optInt("ErrorCode", -1));
 
             setUser(jsonObject.optString("User", null));
             setPass(jsonObject.optString("Pass", null));
@@ -103,6 +102,11 @@ public class MDFSProtocolHeader extends MDFSProtocol {
             if(getError() != null)
                 json.put("Error", getError());
 
+            if(getErrorCode() != -1){
+                json.put("ErrorCode", getErrorCode());
+                //json.put("Error", MDFSErrorCode.info[getErrorCode()]);
+            }
+
             if(getUser() != null)
                 json.put("User", getUser());
 
@@ -125,7 +129,13 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     }
 
 
+    public int getErrorCode() {
+        return errorCode;
+    }
 
+    public void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
+    }
 
     public String getFrom() {
         return from;
