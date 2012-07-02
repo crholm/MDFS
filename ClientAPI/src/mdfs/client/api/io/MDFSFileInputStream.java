@@ -43,6 +43,10 @@ public class MDFSFileInputStream extends InputStream {
 
         //Fetching all DataNodes hosting file;
         int size = file.getMetadata().getLocation().getHostsSize();
+
+        if(size == 0)
+            throw new FileNotFoundException(MDFSErrorCode.info[MDFSErrorCode.ENOENT]);
+
         String hosts[] = new String[size];
         hosts = file.getMetadata().getLocation().getHostsArray(hosts);
 
@@ -144,6 +148,6 @@ public class MDFSFileInputStream extends InputStream {
 
     @Override
     public int available() throws IOException {
-        return Math.abs((int)(length-readBytes));
+        return in.available();
     }
 }
