@@ -13,6 +13,7 @@ public class Config {
 	
 	private static void init() throws ConfigurationException{
 		config = new PropertiesConfiguration("mdfs/config/config.cfg");
+
 	}
 	
 	/**

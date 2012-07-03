@@ -79,7 +79,7 @@ public class ConnectionSheppard implements Runnable{
 
 	private void sendResponse(){
 		
-		if(session.getResponse() != null)
+		if(session.getResponse() != null)// && connection.isConnected())
 			socketFunctions.sendText(connection, session.getResponse().toString());
 	}
 	
@@ -91,6 +91,7 @@ public class ConnectionSheppard implements Runnable{
             getRequest();
             sendResponse();
         } catch (Exception e1) {
+
             e1.printStackTrace();
         }finally {
             try {

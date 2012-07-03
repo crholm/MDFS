@@ -59,6 +59,7 @@ public class SocketFunctions {
 			outputStream.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
+            System.out.println(text);
 			return false;
 		}
 

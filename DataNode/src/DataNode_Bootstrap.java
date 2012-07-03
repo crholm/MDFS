@@ -3,6 +3,11 @@
 import mdfs.datanode.io.ConnectionListener;
 import mdfs.utils.Config;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import java.io.IOException;
+import java.net.ServerSocket;
+
 /**
  * Simply starts the DataNode. No interaction with a user is possible
  * @author Rasmus Holm
@@ -11,6 +16,22 @@ import mdfs.utils.Config;
 public class DataNode_Bootstrap {
 	public static void main(String[] args){
 		System.out.println("DataNode:");
-		new ConnectionListener(Config.getInt("port"));
+
+        try {
+
+            if(Config.getInt("noSSL") == 1){
+                ServerSocket serverSocket = new ServerSocket(Config.getInt("port"));
+                new Thread(new ConnectionListener(serverSocket)).start();
+            }
+
+            if(Config.getInt("SSL") == 1){
+                SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+                SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("SSLport"));
+                new Thread(new ConnectionListener(sslServerSocket)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	}
 }
