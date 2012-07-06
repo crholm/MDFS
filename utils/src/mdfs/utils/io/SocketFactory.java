@@ -2,8 +2,6 @@ package mdfs.utils.io;
 
 import mdfs.utils.Config;
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -24,8 +22,12 @@ public class SocketFactory {
 		if(Config.getInt("SSL") == 1){
 
             try {
+                ESocket socket = new ESocket(host, port+10);
+
+                /*
                 SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
                 SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port+10);
+                */
                 return socket;
             } catch (IOException e){
                 e.printStackTrace();

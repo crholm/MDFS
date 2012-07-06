@@ -1,13 +1,10 @@
-
-
 import mdfs.namenode.io.ConnectionListener;
 import mdfs.namenode.repositories.DataNodeInfoRepository;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
+import mdfs.utils.io.EServerSocket;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -34,9 +31,15 @@ public class NameNode_Bootstrap {
             }
 
             if(Config.getInt("SSL") == 1){
+
+                ServerSocket serverSocket = new EServerSocket(Config.getInt("SSLport"));
+                new Thread(new ConnectionListener(serverSocket)).start();
+
+                /*
                 SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
                 SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("SSLport"));
                 new Thread(new ConnectionListener(sslServerSocket)).start();
+                */
             }
 
         } catch (IOException e) {
