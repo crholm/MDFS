@@ -52,6 +52,35 @@ public class FileQueryImpl implements FileQuery{
 		cd("/" + user, null);
 		
 	}
+
+    public static boolean ping(String host, int port, int byteLoad){
+        SocketFactory socketFactory = new SocketFactory();
+        SocketFunctions socketFunctions = new SocketFunctions();
+
+        MDFSProtocolHeader request = new MDFSProtocolHeader();
+        request.setStage(Stage.REQUEST);
+        request.setType(Type.INFO);
+        request.setMode(Mode.PING);
+
+        Socket socket = socketFactory.createSocket(host, port);
+
+        if(!socketFunctions.sendText(socket, request.toString()))
+            return false;
+
+        MDFSProtocolHeader response;
+        try {
+            response = new MDFSProtocolHeader(socketFunctions.receiveText(socket));
+
+            if(response.getError() != null)
+                return false;
+
+        } catch (JSONException e) {
+            return false;
+        }
+
+        return true;
+
+    }
 	
 	@Override
 	public boolean cd(String path, String flag) {

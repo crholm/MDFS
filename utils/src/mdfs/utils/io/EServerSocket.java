@@ -34,6 +34,15 @@ public class EServerSocket extends ServerSocket {
         super(port, backlog, bindAddr);
     }
 
+
+    public int getKeyLenght() {
+        return keyLenght;
+    }
+
+    public void setKeyLenght(int keyLenght) {
+        this.keyLenght = keyLenght;
+    }
+
     @Override
     public Socket accept() throws IOException {
         if (isClosed())
@@ -44,7 +53,7 @@ public class EServerSocket extends ServerSocket {
         ESocket esocket = new ESocket();
         implAccept(esocket);
 
-        esocket.initHandshake();
+        esocket.initHandshake(keyLenght);
 
         return esocket;
     }

@@ -14,6 +14,7 @@ public class Config {
 	private static void init() throws ConfigurationException{
 		config = new PropertiesConfiguration("mdfs/config/config.cfg");
 
+
 	}
 	
 	/**
@@ -65,8 +66,12 @@ public class Config {
 				e.printStackTrace();
 			}
 		}
-		
+
 		return config.getInt(arg);
 	}
+
+    public static void setProperty(String key, Object value){
+        config.setProperty(key, value);
+    }
 	
 }

@@ -2,6 +2,8 @@ import mdfs.datanode.io.ConnectionListener;
 import mdfs.utils.Config;
 import mdfs.utils.io.EServerSocket;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -16,21 +18,22 @@ public class DataNode_Bootstrap {
 
         try {
 
-            if(Config.getInt("noSSL") == 1){
+            if(Config.getInt("unsecured") == 1){
                 ServerSocket serverSocket = new ServerSocket(Config.getInt("port"));
                 new Thread(new ConnectionListener(serverSocket)).start();
             }
 
             if(Config.getInt("SSL") == 1){
 
-                ServerSocket serverSocket = new EServerSocket(Config.getInt("SSLport"));
-                new Thread(new ConnectionListener(serverSocket)).start();
-
-                /*
                 SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-                SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("SSLport"));
+                SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("port")+10);
                 new Thread(new ConnectionListener(sslServerSocket)).start();
-                */
+
+            }
+
+            if(Config.getInt("Encrypted") == 1){
+                ServerSocket serverSocket = new EServerSocket(Config.getInt("port")+20);
+                new Thread(new ConnectionListener(serverSocket)).start();
             }
 
         } catch (IOException e) {

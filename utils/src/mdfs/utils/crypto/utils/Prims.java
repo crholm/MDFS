@@ -1,6 +1,7 @@
-package mdfs.utils.io;
+package mdfs.utils.crypto.utils;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 /**
  * Package: mdfs.utils.io
@@ -77,5 +78,12 @@ public class Prims {
         BigInteger prime = new BigInteger(prim1024[(int)(prim1024.length*Math.random())]);
         return prime;
     }
+
+    public static BigInteger getPrime(int bits){
+        if(bits == 1024)
+            return get1024prim();
+        return BigInteger.probablePrime(1024, new Random());
+    }
+
 
 }

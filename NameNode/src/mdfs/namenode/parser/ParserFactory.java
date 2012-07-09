@@ -25,7 +25,10 @@ public class ParserFactory {
 			//Returns a parser for Type = Meta-data
 			if(type == Type.METADATA){
 				return new ParserRequestMetaData(mode);
-			}
+			}else if(type == Type.INFO){
+                return new ParserRequestInfo(mode);
+            }
+
 		//Returns a parser for Stage = Info
 		}else if(stage == Stage.INFO){
 			//Returns a parser for Type = File 

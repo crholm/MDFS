@@ -25,7 +25,10 @@ public class ParserFactory {
 		if(stage == Stage.REQUEST){
 			if(type == Type.FILE){
 				return new ParserRequestFile(mode);
-			}
+			}else if( type == Type.INFO){
+                return new ParserRequestInfo(mode);
+            }
+
 		}
 		
 		

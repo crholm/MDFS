@@ -1,5 +1,7 @@
 package mdfs.utils.io;
 
+import mdfs.utils.crypto.PRG;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,9 +25,7 @@ public class EInputStream extends InputStream {
     @Override
     public int read() throws IOException {
         int b = in.read();
-        byte s[] = new byte[1];
-        prg.makeStream(s, 0, 1);
-        return b ^ s[0];
+        return prg.processByte((byte)b);
     }
 
     @Override
@@ -36,12 +36,7 @@ public class EInputStream extends InputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         int i = in.read(b, off, len);
 
-        if(i > 0){
-            byte stream[] = new byte[i];
-            prg.makeStream(stream, 0, i);
-            for(int j = 0; j < i; j++)
-                b[j+off] ^= stream[j];
-        }
+        prg.processBytes(b, off, i);
 
         return i;
     }
@@ -70,10 +65,10 @@ public class EInputStream extends InputStream {
         byte buf[] = new byte[2048];
 
         while(j-2048 > 0){
-            prg.makeStream(buf, 0, 2048);
+            prg.processBytes(buf, 0, 2048);
             j -= 2048;
         }
-        prg.makeStream(buf, 0, (int)j);
+        prg.processBytes(buf, 0, (int)j);
 
         return i;
     }

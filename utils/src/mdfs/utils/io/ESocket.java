@@ -1,5 +1,9 @@
 package mdfs.utils.io;
 
+import mdfs.utils.crypto.DHKeyExchange;
+import mdfs.utils.crypto.PRG;
+import mdfs.utils.crypto.engines.Salsa20;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,7 +11,6 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Random;
 
 /**
  * Package: mdfs.utils.io
@@ -18,26 +21,16 @@ import java.util.Random;
  * @version 1.0
  */
 public class ESocket extends Socket {
-    private BigInteger p;
+    private byte[] s;
 
-    private BigInteger a;
-    private BigInteger b;
-
-    private BigInteger A;
-    private BigInteger B;
-
-    private BigInteger s;
-
-    private PRG inPRG;
-    private PRG outPRG;
+    private DHKeyExchange dh = new DHKeyExchange();
+    private PRG inPRG = new Salsa20();
+    private PRG outPRG = new Salsa20();
+    private int ivLen = inPRG.getIVSize();
+    private int keyLen = inPRG.getKeySize();
 
     private EInputStream inputStream;
     private EOutputStream outputStream;
-
-
-
-    private static final byte two[] = {2};
-    private static final BigInteger g = new BigInteger(two);
 
 
     protected ESocket() {
@@ -67,14 +60,14 @@ public class ESocket extends Socket {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        if(inputStream == null)
+        if(inputStream == null || super.isInputShutdown())
            throw new IOException();
         return inputStream;
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        if(outputStream == null)
+        if(outputStream == null || super.isOutputShutdown())
             throw new IOException();
         return outputStream;
     }
@@ -86,19 +79,19 @@ public class ESocket extends Socket {
 
 
     // Initiates a DH key exchange
-    protected void initHandshake() throws IOException {
-        p = Prims.get1024prim();
+    protected void initHandshake(int keyLength) throws IOException {
 
-        a = new BigInteger(350, new Random());
-        A = g.modPow(a, p);
+        dh.createPublicPrime(keyLength);
+        dh.createPrivateKey(256);
+        dh.createPublicKey();
 
         InputStream in = super.getInputStream();
         OutputStream out = super.getOutputStream();
 
-        byte pArray[] = p.toByteArray();
+        byte pArray[] = dh.getPublicPrime().toByteArray();
         byte pLen[] = intToByteArray(pArray.length);
 
-        byte AArray[] = A.toByteArray();
+        byte AArray[] = dh.getPublicKey().toByteArray();
         byte ALen[] = intToByteArray(AArray.length);
 
 
@@ -115,9 +108,10 @@ public class ESocket extends Socket {
         byte BArray[] = new byte[byteArrayToInt(BLen)];
         in.read(BArray);
 
-        B = new BigInteger(BArray);
+        dh.setForeignPublicKey(new BigInteger(BArray));
+        dh.createSharedSecretKey();
 
-        s = B.modPow(a, p);
+        s = dh.getSharedSecretKey().toByteArray();
 
         initPRG();
 
@@ -129,7 +123,8 @@ public class ESocket extends Socket {
 
     // Waits for ServerSocket to Initiate a DH key exchange
     private void wait4Handshake() throws IOException {
-        b = new BigInteger(350, new Random());
+
+        dh.createPrivateKey(256);
 
         InputStream in = super.getInputStream();
         OutputStream out = super.getOutputStream();
@@ -146,20 +141,21 @@ public class ESocket extends Socket {
         byte AArray[] = new byte[byteArrayToInt(ALen)];
         in.read(AArray);
 
-        p = new BigInteger(pArray);
+        dh.setPublicPrime(new BigInteger(pArray));
+        dh.createPublicKey();
 
-        B = g.modPow(b, p);
-
-        byte BArray[] = B.toByteArray();
+        byte BArray[] = dh.getPublicKey().toByteArray();
         byte BLen[] = intToByteArray(BArray.length);
 
         out.write(BLen);
         out.write(BArray);
         out.flush();
 
-        A = new BigInteger(AArray);
 
-        s = A.modPow(b, p);
+        dh.setForeignPublicKey(new BigInteger(AArray));
+        dh.createSharedSecretKey();
+
+        s = dh.getSharedSecretKey().toByteArray();
 
         initPRG();
 
@@ -173,30 +169,28 @@ public class ESocket extends Socket {
     //Splits the shared secret s into to two separate secrets for corresponding streams
     private void initPRG(){
 
-        byte sArray[] = s.toByteArray();
-        inPRG = new PRG();
-        byte inKey[] = new byte[32];
-        byte inIV[] = new byte[16];
+        byte inKey[] = new byte[keyLen];
+        byte inIV[] = new byte[ivLen];
 
-        outPRG = new PRG();
-        byte outKey[] = new byte[32];
-        byte outIV[] = new byte[16];
+        byte outKey[] = new byte[keyLen];
+        byte outIV[] = new byte[ivLen];
 
-        for(int i = 0; i < 32 && i < sArray.length/2; i++){
-            inKey[i] = sArray[i*2];
-            outKey[i] = sArray[i*2+1];
-            inIV[i%16] = outKey[i];
-            outIV[i%16] = inKey[i];
+        for(int i = 0; i < ivLen && i < s.length/2; i++){
+            inKey[i] = s[i*2];
+            outKey[i] = s[i*2+1];
+
+            if(i < ivLen){
+                inIV[i] = s[s.length-1-i*2];
+                outIV[i] = s[s.length-2-i*2];
+            }
         }
 
-        inPRG.setKey(inKey);
-        inPRG.setIV(inIV);
-        outPRG.setKey(outKey);
-        outPRG.setIV(outIV);
+        inPRG.init(inKey, inIV);
+        outPRG.init(outKey, outIV);
     }
 
 
-    public static byte[] intToByteArray(int l){
+    public byte[] intToByteArray(int l){
         byte[] a = new byte[4];
         for(int i = 0; i<4; i++){
             a[3 - i] = (byte)(l >>> (i * 8));
@@ -204,7 +198,7 @@ public class ESocket extends Socket {
         return a;
     }
 
-    public static int byteArrayToInt(byte[] b){
+    public int byteArrayToInt(byte[] b){
         int intNum = 0;
         for(int i =0; i < 4; i++){
             intNum <<= 8;
