@@ -1,6 +1,5 @@
 package mdfs.utils.io.protocol;
 
-import mdfs.utils.Config;
 import mdfs.utils.Time;
 import mdfs.utils.crypto.HashTypeEnum;
 import mdfs.utils.crypto.Hashing;
@@ -298,6 +297,8 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
         long tokenGenTime = Time.currentTimeMillis();
         String token = tokenGenTime + mode.toString() + filename + tokenKey;
+
+
 
         token = Hashing.hash(HashTypeEnum.SHA1, token);
 
