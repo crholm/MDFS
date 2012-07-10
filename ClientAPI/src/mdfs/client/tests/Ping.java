@@ -17,8 +17,13 @@ public class Ping {
 
     public static void main(String args[]){
 
-
-
+        /*
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        */
 
         Config.getInt("UseEncryption");
         System.out.println("-- Unencrypted --");
@@ -40,7 +45,7 @@ public class Ping {
 
 
 
-
+        /*
         System.out.println("-- SSL --");
         Config.setProperty("UseEncryption", new Integer(1));
 
@@ -55,7 +60,7 @@ public class Ping {
         System.out.println("Load: " + bytes + "b/ping");
         System.out.println("Time: " + time/pings + "ms/ping");
         System.out.println("Total Time: " + time + "ms\n");
-
+      */
 
 
 
@@ -65,7 +70,7 @@ public class Ping {
 
 
         System.out.println("-- Diffie Hellman --");
-        Config.setProperty("UseEncryption", new Integer(2));
+        Config.setProperty("UseEncryption", new Integer(1));
 
         time = System.currentTimeMillis();
         for(int i = 0; i < pings; i++)

@@ -110,6 +110,7 @@ public class FileQueryImpl implements FileQuery{
 		return ls(pwd(), flag);
 	}
 
+    private MDFSProtocolInfo lsInfo;
 	@Override
 	public MDFSProtocolMetaData[] ls(String path, String flag) {
 		//builds a absolute path from a relative or absolute path
@@ -164,7 +165,7 @@ public class FileQueryImpl implements FileQuery{
 
         //File contains the metadata of the ls request to the name node
         MDFSProtocolMetaData file = response.getMetadata();
-
+        lsInfo = response.getInfo();
 
         //If file requested has children they are stored in the array as well
         if(file.getChildrenSize() != 0){
@@ -327,6 +328,7 @@ public class FileQueryImpl implements FileQuery{
             request.setType(Type.FILE);
             request.setMode(Mode.READ);
             request.setMetadata(file[0]);
+            request.setInfo(lsInfo);
 
 			Socket dataNodeSocket;
 			try {
@@ -350,6 +352,7 @@ public class FileQueryImpl implements FileQuery{
 				//Exites and returns false if it contains an error
 				if(response.getError() != null){
 					errorMessage = response.getError();
+                    System.out.println(response.getError());
 					return false;
 				}
 					

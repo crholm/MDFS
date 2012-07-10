@@ -2,8 +2,8 @@ package mdfs.client.tests.junit;
 
 import mdfs.client.api.FileQuery;
 import mdfs.client.api.FileQueryImpl;
-import mdfs.utils.HashTypeEnum;
-import mdfs.utils.Hashing;
+import mdfs.utils.crypto.HashTypeEnum;
+import mdfs.utils.crypto.Hashing;
 import org.junit.Test;
 
 import java.io.File;

@@ -4,6 +4,7 @@ import mdfs.utils.Config;
 import mdfs.utils.io.SocketFactory;
 import mdfs.utils.io.SocketFunctions;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.MDFSProtocolLocation;
 import mdfs.utils.io.protocol.MDFSProtocolMetaData;
 import mdfs.utils.io.protocol.enums.Mode;
@@ -27,6 +28,7 @@ public class Replicator implements Runnable{
 	String hosts[];
 	MDFSProtocolMetaData metadata;
 	String filePath;
+    String fileName;
 	
 	/**
 	 * Handels all replication in case of a file being overwritten. 
@@ -41,7 +43,8 @@ public class Replicator implements Runnable{
         MDFSProtocolLocation location = metadata.getLocation();
 
         //Retrieves the full path on the local FS of the file to be replicated
-        filePath = new FileNameOperations().translateFileNameToFullPath(location.getName());
+        fileName = location.getName();
+        filePath = new FileNameOperations().translateFileNameToFullPath(fileName);
 
         //An array containing all hosts the file
         int size = location.getHostsSize();
@@ -127,7 +130,11 @@ public class Replicator implements Runnable{
 
 			//Loops through and send the file to each data node the file is to be replicated to
 			for(int i = 0; i < hosts.length; i++){
+                header.setInfo(new MDFSProtocolInfo());
+                header.getInfo().addToken(fileName, Mode.CASCADE, Config.getString("Token.key"));
+
 				//Splitt the address into host[0] = address, host[1] = port
+
 				String[] host = hosts[i].split(":");
 
 				//Creates a file for the file to be sent.

@@ -54,6 +54,7 @@ public class NameNodeInformer implements Runnable{
         header.setType(type);
         header.setMode(mode);
         header.setInfo(info);
+        info.addToken(info.getName(), mode, Config.getString("Token.key"));
 
         try {
             //Creates a socket to the name node

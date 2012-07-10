@@ -1,4 +1,4 @@
-package mdfs.utils;
+package mdfs.utils.crypto;
 
 
 import java.io.UnsupportedEncodingException; 
@@ -53,7 +53,7 @@ public class Hashing {
 				return null;
 			}
 			
-			md.update(string.getBytes("iso-8859-1"), 0, string.length());
+			md.update(string.getBytes("UTF8"), 0, string.length());
 			hashed = md.digest();
 		    return convertToHex(hashed);
 			

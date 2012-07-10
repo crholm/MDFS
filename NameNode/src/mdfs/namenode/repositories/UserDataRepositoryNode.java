@@ -1,6 +1,6 @@
 package mdfs.namenode.repositories;
 
-import mdfs.utils.HashTypeEnum;
+import mdfs.utils.crypto.HashTypeEnum;
 /**
  * A node that holds user data
  * @author Rasmus Holm

@@ -57,11 +57,16 @@ public class ParserInfoFile implements Parser {
         if(info == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "JSON object Info dose not exist in header"));
             return false;
-        }else if(info.getPath() == null || info.getHost() == null || info.getPort() == null || info.getOverwrite() == null ){
+        }
+        if(info.getPath() == null || info.getHost() == null || info.getPort() == null || info.getOverwrite() == null ){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "path, host, port and/or overwrite dose not exist in Info field"));
             return false;
         }
+        if(!info.authToken(info.getName(), mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
+            return false;
 
+        }
 
         String filePath = info.getPath();
         String host = info.getHost();

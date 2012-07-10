@@ -1,9 +1,9 @@
 import mdfs.datanode.io.ConnectionListener;
 import mdfs.utils.Config;
+import mdfs.utils.Time;
+import mdfs.utils.Verbose;
 import mdfs.utils.io.EServerSocket;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -14,7 +14,11 @@ import java.net.ServerSocket;
  */
 public class DataNode_Bootstrap {
 	public static void main(String[] args){
-		System.out.println("DataNode:");
+
+        Verbose.print("DataNode", null, 1);
+
+
+        Time.syncTime(Config.getString("NameNode.address"), Config.getInt("NameNode.port"));
 
         try {
 
@@ -23,16 +27,8 @@ public class DataNode_Bootstrap {
                 new Thread(new ConnectionListener(serverSocket)).start();
             }
 
-            if(Config.getInt("SSL") == 1){
-
-                SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-                SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("port")+10);
-                new Thread(new ConnectionListener(sslServerSocket)).start();
-
-            }
-
             if(Config.getInt("Encrypted") == 1){
-                ServerSocket serverSocket = new EServerSocket(Config.getInt("port")+20);
+                ServerSocket serverSocket = new EServerSocket(Config.getInt("port")+10);
                 new Thread(new ConnectionListener(serverSocket)).start();
             }
 

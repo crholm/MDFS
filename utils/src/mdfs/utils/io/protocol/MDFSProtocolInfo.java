@@ -1,6 +1,11 @@
 package mdfs.utils.io.protocol;
 
+import mdfs.utils.Config;
+import mdfs.utils.Time;
+import mdfs.utils.crypto.HashTypeEnum;
+import mdfs.utils.crypto.Hashing;
 import mdfs.utils.io.protocol.enums.EventStatus;
+import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.io.protocol.enums.Overwrite;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +31,9 @@ public class MDFSProtocolInfo extends MDFSProtocol {
     private String host;
     private String port;
     private long length = -1;
+    private long localTime = -1;
+    private String token;
+    private long tokenGenTime = -1;
     private LinkedList<String> datanodes;
 
     public MDFSProtocolInfo(){}
@@ -50,6 +58,10 @@ public class MDFSProtocolInfo extends MDFSProtocol {
             setHost(jsonObject.optString("host", null));
             setPort(jsonObject.optString("port", null));
             setLength(jsonObject.optLong("length", -1));
+            setLocalTime(jsonObject.optLong("localTime", -1));
+
+            setToken(jsonObject.optString("token", null));
+            setTokenGenTime(jsonObject.optLong("tokenGenTime", -1));
 
             if(jsonObject.has("datanodes")){
                 JSONArray array = jsonObject.optJSONArray("datanodes");
@@ -104,6 +116,15 @@ public class MDFSProtocolInfo extends MDFSProtocol {
             if(getLength() != -1)
                 json.put("length", getLength());
 
+            if(getLocalTime() != -1)
+                json.put("localTime", getLocalTime());
+
+            if(getToken() != null)
+                json.put("token", getToken());
+
+            if(getTokenGenTime() != -1)
+                json.put("tokenGenTime", getTokenGenTime());
+
 
             if(getDatanodes() != null)
                     json.put("datanodes", new JSONArray(getDatanodes()));
@@ -115,6 +136,30 @@ public class MDFSProtocolInfo extends MDFSProtocol {
 
 
             return json;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public long getTokenGenTime() {
+        return tokenGenTime;
+    }
+
+    public void setTokenGenTime(long tokenGenTime) {
+        this.tokenGenTime = tokenGenTime;
+    }
+
+    public long getLocalTime() {
+        return localTime;
+    }
+
+    public void setLocalTime(long localTime) {
+        this.localTime = localTime;
     }
 
     public String getPath() {
@@ -247,6 +292,42 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         datanodes.add(datanode);
         setDatanodes(datanodes);
     }
+
+
+    public void addToken(String filename, Mode mode, String tokenKey){
+
+        long tokenGenTime = Time.currentTimeMillis();
+        String token = tokenGenTime + mode.toString() + filename + tokenKey;
+
+        token = Hashing.hash(HashTypeEnum.SHA1, token);
+
+        this.setToken(token);
+        this.setTokenGenTime(tokenGenTime);
+    }
+
+    public boolean authToken(String filename, Mode mode, String tokenKey, long timeWindow){
+        if(getToken() == null)
+            return false;
+
+        if(getTokenGenTime() == -1)
+            return false;
+
+        if(getTokenGenTime()+timeWindow < Time.currentTimeMillis())
+            return false;
+
+        String token = getTokenGenTime() + mode.toString() + filename + tokenKey;
+        token = Hashing.hash(HashTypeEnum.SHA1, token);
+
+        if(getToken().equals(token))
+            return true;
+
+        return false;
+
+    }
+
+
+
+
 
 
 }

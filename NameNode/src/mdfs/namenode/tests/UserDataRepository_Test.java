@@ -2,7 +2,7 @@ package mdfs.namenode.tests;
 
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
-import mdfs.utils.Hashing;
+import mdfs.utils.crypto.Hashing;
 
 public class UserDataRepository_Test {
 	

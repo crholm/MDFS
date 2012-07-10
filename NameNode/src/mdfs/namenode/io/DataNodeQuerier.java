@@ -2,9 +2,11 @@ package mdfs.namenode.io;
 
 import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
+import mdfs.utils.Config;
 import mdfs.utils.io.SocketFactory;
 import mdfs.utils.io.SocketFunctions;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.io.protocol.enums.Type;
@@ -20,7 +22,8 @@ public class DataNodeQuerier implements Runnable{
 	private SocketFactory socketFactory = new SocketFactory();
 	private SocketFunctions socketFunctions = new SocketFunctions();
 	private MDFSProtocolHeader query;
-	private DataNodeInfoRepositoryNode[] dataNodes = null; 
+	private DataNodeInfoRepositoryNode[] dataNodes = null;
+    private String fileName;
 	
 	/**
 	 * This method will remove all raw data that are deposited on the diffrent datanodes from them.
@@ -38,7 +41,7 @@ public class DataNodeQuerier implements Runnable{
         query.setMode(Mode.REMOVE);
 
         query.setMetadata(node);
-
+        fileName = node.getStorageName();
 
 		//Starts the thread that will send the query
 		new Thread(this).start();
@@ -52,6 +55,8 @@ public class DataNodeQuerier implements Runnable{
 		Socket dataNodeSocket;
 		//Loops all the nodes
 		for (DataNodeInfoRepositoryNode node : dataNodes) {
+            query.setInfo(new MDFSProtocolInfo());
+            query.getInfo().addToken(fileName, query.getMode(), Config.getString("Token.key"));
 
             //Creates a socket to one datanode
             dataNodeSocket = socketFactory.createSocket(node.getAddress(), Integer.parseInt(node.getPort()));

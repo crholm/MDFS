@@ -2,8 +2,8 @@ package mdfs.utils.tests.junit;
 
 import static org.junit.Assert.*;
 
-import mdfs.utils.HashTypeEnum;
-import mdfs.utils.Hashing;
+import mdfs.utils.crypto.HashTypeEnum;
+import mdfs.utils.crypto.Hashing;
 
 import org.junit.Test;
 

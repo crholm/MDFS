@@ -3,6 +3,7 @@ package mdfs.utils.io;
 import mdfs.utils.crypto.DHKeyExchange;
 import mdfs.utils.crypto.PRG;
 import mdfs.utils.crypto.engines.Salsa20;
+import mdfs.utils.crypto.engines.SosemanukFast;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,8 +25,10 @@ public class ESocket extends Socket {
     private byte[] s;
 
     private DHKeyExchange dh = new DHKeyExchange();
-    private PRG inPRG = new Salsa20();
-    private PRG outPRG = new Salsa20();
+    private int privateKeyLen = 256;
+
+    private PRG inPRG = new SosemanukFast();
+    private PRG outPRG = new SosemanukFast();
     private int ivLen = inPRG.getIVSize();
     private int keyLen = inPRG.getKeySize();
 
@@ -58,6 +61,38 @@ public class ESocket extends Socket {
     }
 
 
+    protected ESocket(int privateKeyLen) {
+        super();
+        this.privateKeyLen = privateKeyLen;
+    }
+
+    public ESocket(String host, int port, int privateKeyLen) throws UnknownHostException, IOException {
+        super(host, port);
+        this.privateKeyLen = privateKeyLen;
+        wait4Handshake();
+    }
+
+    public ESocket(InetAddress address, int port, int privateKeyLen) throws IOException {
+        super(address, port);
+        this.privateKeyLen = privateKeyLen;
+        wait4Handshake();
+    }
+
+    public ESocket(String host, int port, InetAddress localAddr, int localPort, int privateKeyLen) throws IOException {
+        super(host, port, localAddr, localPort);
+        this.privateKeyLen = privateKeyLen;
+        wait4Handshake();
+    }
+
+    public ESocket(InetAddress address, int port, InetAddress localAddr, int localPort, int privateKeyLen) throws IOException {
+        super(address, port, localAddr, localPort);
+        this.privateKeyLen = privateKeyLen;
+        wait4Handshake();
+    }
+
+
+
+
     @Override
     public InputStream getInputStream() throws IOException {
         if(inputStream == null || super.isInputShutdown())
@@ -82,7 +117,7 @@ public class ESocket extends Socket {
     protected void initHandshake(int keyLength) throws IOException {
 
         dh.createPublicPrime(keyLength);
-        dh.createPrivateKey(256);
+        dh.createPrivateKey(privateKeyLen);
         dh.createPublicKey();
 
         InputStream in = super.getInputStream();
@@ -124,7 +159,7 @@ public class ESocket extends Socket {
     // Waits for ServerSocket to Initiate a DH key exchange
     private void wait4Handshake() throws IOException {
 
-        dh.createPrivateKey(256);
+        dh.createPrivateKey(privateKeyLen);
 
         InputStream in = super.getInputStream();
         OutputStream out = super.getOutputStream();

@@ -24,20 +24,7 @@ public class SocketFactory {
 		if(Config.getInt("UseEncryption") == 1){
 
             try {
-                SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-                SSLSocket socket = (SSLSocket) sslSocketFactory.createSocket(host, port+10);
-                return socket;
-
-            } catch (IOException e){
-                e.printStackTrace();
-                return null;
-            }
-
-
-        }else if(Config.getInt("UseEncryption") == 2){
-
-            try {
-                return new ESocket(host, port+20);
+                return new ESocket(host, port+10);
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;

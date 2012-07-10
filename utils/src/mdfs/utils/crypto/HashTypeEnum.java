@@ -1,4 +1,4 @@
-package mdfs.utils;
+package mdfs.utils.crypto;
 /**
  * 
  * @author Rasmus Holm

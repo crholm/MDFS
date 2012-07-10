@@ -3,7 +3,7 @@ package mdfs.namenode.repositories;
 
 import mdfs.namenode.sql.MySQLFetch;
 import mdfs.namenode.sql.MySQLUpdater;
-import mdfs.utils.Hashing;
+import mdfs.utils.crypto.Hashing;
 import mdfs.utils.SplayTree;
 import mdfs.utils.Time;
 import mdfs.utils.io.protocol.enums.MetadataType;

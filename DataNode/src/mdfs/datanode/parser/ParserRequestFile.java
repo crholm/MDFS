@@ -100,12 +100,17 @@ public class ParserRequestFile implements Parser{
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
             return false;
 
-        }else if(metadata.getLocation() == null){
+        }if(metadata.getLocation() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
             return false;
 
-        }else if(metadata.getLocation().getName() == null){
+        }
+        if(metadata.getLocation().getName() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+        if(request.getInfo() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Info was not included in request"));
             return false;
         }
 
@@ -115,6 +120,12 @@ public class ParserRequestFile implements Parser{
 
         //Retrivse the file name and builds the path to it
         String fileName = location.getName();
+
+        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
+            return false;
+        }
+
         String fullPath = nameTranslation.translateFileNameToFullPath(fileName);
 
         //Creates all dirs on the local FS necessary to write the file to it
@@ -163,17 +174,28 @@ public class ParserRequestFile implements Parser{
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
             return false;
 
-        }else if(metadata.getLocation() == null){
+        }if(metadata.getLocation() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
             return false;
 
-        }else if(metadata.getLocation().getName() == null){
+        }
+        if(metadata.getLocation().getName() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+        if(request.getInfo() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Info was not included in request"));
             return false;
         }
 
 
         String fileName = metadata.getLocation().getName();
+
+        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
+            return false;
+        }
+
         String fullPath = nameTranslation.translateFileNameToFullPath(fileName);
 
         //Removes it and returnes if successfull or not
@@ -198,19 +220,31 @@ public class ParserRequestFile implements Parser{
         if(request.getMetadata() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
             return false;
-
-        }else if(request.getMetadata().getLocation() == null){
+        }
+        if(request.getMetadata().getLocation() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
             return false;
 
-        }else if(request.getMetadata().getLocation().getName() == null){
+        }
+        if(request.getMetadata().getLocation().getName() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+        if(request.getInfo() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Info was not included in request"));
             return false;
         }
 
 
+
         //Figuers out what file to send back
         String fileName = request.getMetadata().getLocation().getName();
+
+        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
+            return false;
+        }
+
         File file = new File(nameTranslation.translateFileNameToFullPath(fileName));
 
 
@@ -256,16 +290,23 @@ public class ParserRequestFile implements Parser{
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data was not included in request"));
             return false;
 
-        }else if(metadata.getLocation() == null){
+        }
+        if(metadata.getLocation() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location was not included in request"));
             return false;
 
-        }else if(metadata.getPath() == null){
+        }
+        if(metadata.getPath() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> path was not included in request"));
             return false;
 
-        }else if(metadata.getLocation().getName() == null){
+        }
+        if(metadata.getLocation().getName() == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Meta-data -> Location -> name was not included in request"));
+            return false;
+        }
+        if(request.getInfo() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Field Info was not included in request"));
             return false;
         }
 
@@ -273,6 +314,12 @@ public class ParserRequestFile implements Parser{
 
         //Figures out the path to the file in the local file system
         String fileName = metadata.getLocation().getName();
+
+        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
+            return false;
+        }
+
         String fileFullPath = nameTranslation.translateFileNameToFullPath(fileName);
         String fileDir = nameTranslation.translateFileNameToDirPath(fileName);
 
@@ -349,6 +396,4 @@ public class ParserRequestFile implements Parser{
 
         return true;
 	}
-
-
 }

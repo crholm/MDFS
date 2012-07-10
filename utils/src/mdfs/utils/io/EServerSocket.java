@@ -15,8 +15,8 @@ import java.net.SocketException;
  */
 public class EServerSocket extends ServerSocket {
 
-    private int keyLenght = 1024;
-
+    private int publicKeyLength = 768;
+    private int privateKeyLength = 256;
 
     public EServerSocket() throws IOException {
         super();
@@ -24,6 +24,12 @@ public class EServerSocket extends ServerSocket {
 
     public EServerSocket(int port) throws IOException {
         super(port);
+    }
+
+    public EServerSocket(int port, int publicKeyLength, int privateKeyLength) throws IOException {
+        super(port);
+        this.privateKeyLength = privateKeyLength;
+        this.publicKeyLength = publicKeyLength;
     }
 
     public EServerSocket(int port, int backlog) throws IOException {
@@ -35,12 +41,12 @@ public class EServerSocket extends ServerSocket {
     }
 
 
-    public int getKeyLenght() {
-        return keyLenght;
+    public int getPublicKeyLength() {
+        return publicKeyLength;
     }
 
-    public void setKeyLenght(int keyLenght) {
-        this.keyLenght = keyLenght;
+    public void setPublicKeyLength(int keyLenght) {
+        this.publicKeyLength = keyLenght;
     }
 
     @Override
@@ -50,10 +56,10 @@ public class EServerSocket extends ServerSocket {
         if (!isBound())
             throw new SocketException("Socket is not bound yet");
 
-        ESocket esocket = new ESocket();
+        ESocket esocket = new ESocket(privateKeyLength);
         implAccept(esocket);
 
-        esocket.initHandshake(keyLenght);
+        esocket.initHandshake(publicKeyLength);
 
         return esocket;
     }

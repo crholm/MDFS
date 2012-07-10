@@ -7,7 +7,10 @@ import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
+import mdfs.utils.Time;
 import mdfs.utils.Verbose;
+import mdfs.utils.crypto.HashTypeEnum;
+import mdfs.utils.crypto.Hashing;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.MDFSProtocolMetaData;
@@ -239,6 +242,7 @@ public class ParserRequestMetaData implements Parser {
         //If node is a file, a the metadata and location of it is set as a response
         }else if(node.getFileType() == MetadataType.FILE){
 
+            response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
             session.setResponse(response);
             return true;
 
@@ -344,6 +348,7 @@ public class ParserRequestMetaData implements Parser {
         //Creates the header for the response
         MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
         response.setMetadata(node);
+        response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
         session.setResponse(response);
 
         return true;
@@ -393,9 +398,13 @@ public class ParserRequestMetaData implements Parser {
 		MDFSProtocolInfo info = new MDFSProtocolInfo();
 
         info.setDatanodes(DataNodeInfoRepository.getInstance().toList());
+        info.setLocalTime(Time.currentTimeMillis());
 
 		header.setInfo(info);
 		
 		return header;
 	}
+
+
+
 }

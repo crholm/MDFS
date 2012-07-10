@@ -1,8 +1,10 @@
 package mdfs.namenode.parser;
 
 import mdfs.utils.Config;
+import mdfs.utils.Time;
 import mdfs.utils.Verbose;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
+import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.io.protocol.enums.Stage;
 import mdfs.utils.io.protocol.enums.Type;
@@ -44,6 +46,9 @@ public class ParserRequestInfo implements Parser {
             case PING:
                 MDFSProtocolHeader response = this.session.getRequest();
                 response.setStage(Stage.RESPONSE);
+                if(response.getInfo() == null)
+                    response.setInfo(new MDFSProtocolInfo());
+                response.getInfo().setLocalTime(Time.currentTimeMillis());
                 this.session.setResponse(response);
                 return true;
 
