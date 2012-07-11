@@ -2,8 +2,7 @@ package mdfs.client.tests.junit;
 
 import mdfs.client.api.FileQuery;
 import mdfs.client.api.FileQueryImpl;
-import mdfs.utils.crypto.HashTypeEnum;
-import mdfs.utils.crypto.Hashing;
+import mdfs.utils.crypto.digests.SHA1;
 import org.junit.Test;
 
 import java.io.File;
@@ -110,7 +109,7 @@ public class MDFSIntegrationTest {
 	public void testGetStringFileString() {
 		FileQuery fq = new FileQueryImpl("test1", "test1");
 		
-		String testStringHash = Hashing.hash(HashTypeEnum.SHA1, testString);
+		String testStringHash = SHA1.quick(testString.getBytes());
 		try {
 			File file = File.createTempFile("source", ".junitTest");
 			FileOutputStream out = new FileOutputStream(file);
@@ -136,7 +135,7 @@ public class MDFSIntegrationTest {
 			in.read(b);
 			
 			String newFileContent = new String(b);
-			String newFileContentHash = Hashing.hash(HashTypeEnum.SHA1, newFileContent);
+			String newFileContentHash = SHA1.quick(newFileContent.getBytes());
 			
 			assertTrue( testStringHash.equals(newFileContentHash)   );
 

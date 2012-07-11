@@ -1,15 +1,15 @@
 package mdfs.namenode.repositories;
 
-import mdfs.utils.crypto.HashTypeEnum;
 /**
  * A node that holds user data
  * @author Rasmus Holm
  *
  */
 public class UserDataRepositoryNode implements Comparable<UserDataRepositoryNode>{
-	private String name;
+	private int uid;
+    private String name;
 	private String pwdHash;
-	private HashTypeEnum hashType = HashTypeEnum.SHA1;
+
 	
 	/**
 	 * 
@@ -18,7 +18,16 @@ public class UserDataRepositoryNode implements Comparable<UserDataRepositoryNode
 	public UserDataRepositoryNode(String name){
 		this.name = name;
 	}
-	/**
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    /**
 	 * 
 	 * @return the key, the username
 	 */
@@ -47,21 +56,7 @@ public class UserDataRepositoryNode implements Comparable<UserDataRepositoryNode
 	public void setPwdHash(String pwdHash) {
 		this.pwdHash = pwdHash;
 	}
-	/**
-	 * 
-	 * @return the type of hashing the password should be hashed with
-	 */
-	public HashTypeEnum getHashType() {
-		return hashType;
-	}
-	/**
-	 * 
-	 * @param hashType set the type of which the password should be hashed with
-	 */
-	public void setHashType(HashTypeEnum hashType) {
-		this.hashType = hashType;
-	}
-	
+
 	/**
 	 * 
 	 */

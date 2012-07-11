@@ -1,15 +1,14 @@
 package mdfs.namenode.sql;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.ReentrantLock;
-
-
 import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
 import mdfs.utils.Config;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -283,13 +282,15 @@ public class MySQLUpdater implements Runnable{
 	 */
 	private String createUserDataRowSQLStatement(UserDataRepositoryNode node){
 		return "INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data` (" +
-				"`name`, " +
+                "`uid`, " +
+                "`name`, " +
 				"`pwdHash`" +
 				") " +
 				"VALUES (" +
-				"'" + node.getName() + "', '" + node.getPwdHash() + "')" +
+				"'" + node.getUid() + "', '" + node.getName() + "', '" + node.getPwdHash() + "')" +
 				"ON DUPLICATE KEY UPDATE" +
-				"`name` = '" + node.getName() + "', " +
+                "`uid` = '" + node.getUid() + "', " +
+                "`name` = '" + node.getName() + "', " +
 				"`pwdHash` = '"+ node.getPwdHash() + "'" +
 				";";
 	}

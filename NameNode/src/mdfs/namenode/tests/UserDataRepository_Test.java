@@ -2,7 +2,7 @@ package mdfs.namenode.tests;
 
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
-import mdfs.utils.crypto.Hashing;
+import mdfs.utils.crypto.digests.SHA1;
 
 public class UserDataRepository_Test {
 	
@@ -11,7 +11,7 @@ public class UserDataRepository_Test {
 		System.out.println("Building user data...");
 		for(int i = 0; i < 10000; i++){
 			UserDataRepositoryNode d = new UserDataRepositoryNode(Integer.toString(i));
-			d.setPwdHash(Hashing.hash(d.getHashType(), Integer.toString(i)));
+			d.setPwdHash(SHA1.quick(Integer.toString(i).getBytes()));
 			ud.addUser(d);
 		}
 		System.out.println("done.");

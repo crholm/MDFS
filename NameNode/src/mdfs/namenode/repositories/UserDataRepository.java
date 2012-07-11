@@ -3,11 +3,12 @@ package mdfs.namenode.repositories;
 
 import mdfs.namenode.sql.MySQLFetch;
 import mdfs.namenode.sql.MySQLUpdater;
-import mdfs.utils.crypto.Hashing;
 import mdfs.utils.SplayTree;
 import mdfs.utils.Time;
+import mdfs.utils.crypto.digests.SHA1;
 import mdfs.utils.io.protocol.enums.MetadataType;
 
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.locks.ReentrantLock;
 
 
@@ -23,8 +24,10 @@ public class UserDataRepository {
 	
 	
 	private SplayTree<String, UserDataRepositoryNode> repository = new SplayTree<String, UserDataRepositoryNode>();
+    private SplayTree<Integer, UserDataRepositoryNode> repositoryUid = new SplayTree<Integer, UserDataRepositoryNode>();
 	private ReentrantLock lock = new ReentrantLock(true);
 	private static UserDataRepository instance= null;
+    private int uidCounter = 1000;
 	
 	
 	private UserDataRepository(){
@@ -64,14 +67,19 @@ public class UserDataRepository {
 				
 				//Adds user to repo
 				repository.put(node.getKey(), node);
+                repositoryUid.put(node.getUid(), node);
 				
 				//Creates the home dir for the new user
 				MetaDataRepositoryNode homeDir = new MetaDataRepositoryNode();
 				homeDir.setFilePath("/" + node.getName());
 				homeDir.setFileType(MetadataType.DIR);
-				String time = Time.getTimeStamp();
-				homeDir.setCreated(time);
+
+                //TODO fix this. should be time in milli sec, not a date.
+                String time = Time.getTimeStamp();
+                homeDir.setCreated(time);
 				homeDir.setLastEdited(time);
+
+                //TODO fix this. owner and groupe are not text but uid and gid
 				homeDir.setOwner(node.getName());
 				homeDir.setGroup(node.getName());
 				
@@ -80,7 +88,8 @@ public class UserDataRepository {
 				
 				//Writes the new user to permanent storage
 				MySQLUpdater.getInstance().updateUserData(node);
-				
+                //TODO Save user counter.
+
 				result = true;
 			}
 		}finally{
@@ -101,12 +110,25 @@ public class UserDataRepository {
 		try{
 			result = repository.remove(name);
 			if(result != null)
+                result = repositoryUid.remove(result.getUid());
 				MySQLUpdater.getInstance().removeUserData(result);
 		}finally{
 			lock.unlock();
 		}
 		return result;
 	}
+    public UserDataRepositoryNode removeUser(int uid){
+        lock.lock();
+        UserDataRepositoryNode result;
+        try{
+            result = getUser(uid);
+            removeUser(result.getName());
+
+        }finally{
+            lock.unlock();
+        }
+        return result;
+    }
 	
 	/**
 	 * 1. Adds a user in the form a {@link UserDataRepositoryNode} but generated from name and pass to the Repository where the key is the username
@@ -121,9 +143,12 @@ public class UserDataRepository {
 		boolean result = false;
 		try{
 			UserDataRepositoryNode node = new UserDataRepositoryNode(name);
-			node.setPwdHash(Hashing.hash(node.getHashType(), pass));
+			node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));
+            node.setUid(uidCounter++);
 			result = addUser(node);		
-		}finally{
+		} catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } finally{
 			lock.unlock();
 		}
 		return result;
@@ -144,6 +169,17 @@ public class UserDataRepository {
 		}
 		return node;
 	}
+
+    public UserDataRepositoryNode getUser(int uid){
+        lock.lock();
+        UserDataRepositoryNode node = null;
+        try{
+            node = repositoryUid.get(uid);
+        }finally{
+            lock.unlock();
+        }
+        return node;
+    }
 	
 	/**
 	 * Authenticates a user
@@ -162,6 +198,17 @@ public class UserDataRepository {
 		}
 		return result;
 	}
+    public boolean authUser(int uid, String password){
+        lock.lock();
+        boolean result = false;
+        try{
+            UserDataRepositoryNode user = getUser(uid);
+            result = authUser(user, password);
+        }finally{
+            lock.unlock();
+        }
+        return result;
+    }
 	/**
 	 * Authenticates a user
 	 * @param user the node that the password is checked against
@@ -172,10 +219,12 @@ public class UserDataRepository {
 		lock.lock();
 		boolean result = false;
 		try{
-			if(Hashing.hash(user.getHashType(), password).equals(user.getPwdHash())){
+			if(SHA1.quick(password.getBytes("UTF8")).equals(user.getPwdHash())){
 				result = true;
 			}
-		}finally{
+		} catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } finally{
 			lock.unlock();
 		}
 		return result;
@@ -185,10 +234,12 @@ public class UserDataRepository {
 	 * Loads user data repository from permanent storage
 	 */
 	public void load(){
+        //TODO load user counter.
 		MySQLFetch sql = new MySQLFetch();
 		UserDataRepositoryNode[] nodes = sql.getUserDataRepositoryNodes();
 		for (UserDataRepositoryNode node : nodes) {
 			repository.put(node.getKey(), node);
+            repositoryUid.put(node.getUid(), node);
 		}
 		
 	}

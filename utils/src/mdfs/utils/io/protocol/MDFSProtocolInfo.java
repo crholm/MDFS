@@ -1,8 +1,8 @@
 package mdfs.utils.io.protocol;
 
 import mdfs.utils.Time;
-import mdfs.utils.crypto.HashTypeEnum;
-import mdfs.utils.crypto.Hashing;
+import mdfs.utils.crypto.HMAC;
+import mdfs.utils.crypto.digests.SHA1;
 import mdfs.utils.io.protocol.enums.EventStatus;
 import mdfs.utils.io.protocol.enums.Mode;
 import mdfs.utils.io.protocol.enums.Overwrite;
@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.util.LinkedList;
 
 /**
@@ -293,16 +295,30 @@ public class MDFSProtocolInfo extends MDFSProtocol {
     }
 
 
+    private String genToken(String msg, String key){
+        try {
+            HMAC mac = new HMAC(new SHA1(), key.getBytes("UTF8"));
+
+            byte[] tmp = new byte[mac.getDigestSize()];
+
+            mac.doFinal(msg.getBytes("UTF8"), tmp, 0);
+
+            return new BigInteger(1, tmp).toString(16);
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
     public void addToken(String filename, Mode mode, String tokenKey){
 
         long tokenGenTime = Time.currentTimeMillis();
-        String token = tokenGenTime + mode.toString() + filename + tokenKey;
 
+        this.setToken(
+                genToken( tokenGenTime + mode.toString() + filename, tokenKey) );
 
-
-        token = Hashing.hash(HashTypeEnum.SHA1, token);
-
-        this.setToken(token);
         this.setTokenGenTime(tokenGenTime);
     }
 
@@ -316,8 +332,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         if(getTokenGenTime()+timeWindow < Time.currentTimeMillis())
             return false;
 
-        String token = getTokenGenTime() + mode.toString() + filename + tokenKey;
-        token = Hashing.hash(HashTypeEnum.SHA1, token);
+        String token =  genToken(getTokenGenTime() + mode.toString() + filename, tokenKey);
 
         if(getToken().equals(token))
             return true;

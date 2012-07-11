@@ -9,8 +9,6 @@ import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
 import mdfs.utils.Time;
 import mdfs.utils.Verbose;
-import mdfs.utils.crypto.HashTypeEnum;
-import mdfs.utils.crypto.Hashing;
 import mdfs.utils.io.protocol.MDFSProtocolHeader;
 import mdfs.utils.io.protocol.MDFSProtocolInfo;
 import mdfs.utils.io.protocol.MDFSProtocolMetaData;

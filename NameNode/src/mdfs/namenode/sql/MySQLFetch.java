@@ -91,6 +91,7 @@ public class MySQLFetch {
 			while(result.next()){
 				node = new UserDataRepositoryNode(result.getString("name"));
 				node.setPwdHash(result.getString("pwdHash"));
+                node.setUid(result.getInt("uid"));
 				list.add(node);
 			}
 			
