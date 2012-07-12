@@ -2,10 +2,7 @@ package mdfs.namenode.parser;
 
 
 import mdfs.namenode.io.DataNodeQuerier;
-import mdfs.namenode.repositories.DataNodeInfoRepository;
-import mdfs.namenode.repositories.MetaDataRepository;
-import mdfs.namenode.repositories.MetaDataRepositoryNode;
-import mdfs.namenode.repositories.UserDataRepository;
+import mdfs.namenode.repositories.*;
 import mdfs.utils.Config;
 import mdfs.utils.Time;
 import mdfs.utils.Verbose;
@@ -91,23 +88,22 @@ public class ParserRequestMetaData implements Parser {
         }
 
         //Selects the correct sub-parser that handles the set Mode.
-        if(mode == Mode.WRITE){
-
-            return parseWrite();
-        }else if(mode == Mode.READ){
-            return parseRead();
-        }else if(mode == Mode.REMOVE){
-            return parseRemove();
-        }else if(mode == Mode.INFO){
-            return parseInfo();
-        }else{
-            //Creates a error response
-            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Mode: " + mode + " is an non-valid mode"));
-            setErrorMsg("Mode: " + mode + " is an non-valid mode");
-
-            return false;
+        switch (mode){
+            case WRITE:
+            case WRITESTREAM:
+                return parseWrite();
+            case READ:
+                return parseRead();
+            case REMOVE:
+                return parseRemove();
+            case INFO:
+                return parseInfo();
+            default:
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Mode: " + mode + " is an non-valid mode"));
+                setErrorMsg("Mode: " + mode + " is an non-valid mode");
+                return false;
         }
-		
+
 	}
 
 	/*
@@ -272,8 +268,13 @@ public class ParserRequestMetaData implements Parser {
         if(metadata == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
             return false;
-        }else if(metadata.getPath() == null ){
+        }
+        if(metadata.getPath() == null ){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
+        if(metadata.getType() == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> type was not included in request"));
             return false;
         }
 
@@ -284,39 +285,74 @@ public class ParserRequestMetaData implements Parser {
         MetaDataRepositoryNode node = metaDataRepo.get(filePath);
 
         /*
-         * File to write dose not exist previously
+         * File or Dir to write dose not exist previously
          */
         if(node == null){
+
 
             //TODO Check that all values are present in MetaData from Client
             //Creates the new node with the metadata to be stored in the repository
             node = new MetaDataRepositoryNode();
+
             node.setFilePath(metadata.getPath());
-            node.setSize(metadata.getSize());
-
-
-
-            if(session.getRequest().getUser().equals(metadata.getOwner()) && session.getRequest().getUser().equals(metadata.getGroup())){
-                node.setOwner(metadata.getOwner());
-                node.setGroup(metadata.getGroup());
-
-
-
-                node.setGid(metadata.getGid());
-                node.setUid(metadata.getUid());
-            }else {
-                //TODO Implement ACL
-            }
-
-            node.setPermission(metadata.getPermission());
-            node.setCreated(metadata.getCreated());
-            node.setLastEdited(metadata.getLastEdited());
-            node.setLastTouched(metadata.getLastTouched());
             node.setFileType(metadata.getType());
 
 
-            if(metadata.getType() == MetadataType.FILE)
+
+
+            if(node.getType() == MetadataType.FILE)
                 node.setStorageName(new FileNameOperations().createUniqName());
+
+
+        //Sets Permissions
+            if(metadata.getPermission() == -1){
+                if(node.getType() == MetadataType.FILE)
+                    node.setPermission(664);  //Basic permissions for a File
+                else
+                    node.setPermission(775);  //Basic permissions for a DIR
+
+            }else{
+                node.setPermission(metadata.getPermission());
+            }
+
+
+        //Sets File/Dir size
+            if(node.getType() == MetadataType.FILE)
+                node.setSize(0);
+            else
+                node.setSize(metadata.getSize());
+
+
+
+        //Sets Owner, Group, uid, gid
+            String user = session.getRequest().getUser();
+            node.setOwner(user);
+            node.setGroup(user);
+
+            node.setUid(UserDataRepository.getInstance().getUid(user));
+            node.setGid(GroupDataRepository.getInstance().getGid(user));
+
+
+
+
+         //Sets diffrent time for file/dir.
+            long time = Time.currentTimeMillis();
+
+            if(metadata.getCreated() == -1)
+                node.setCreated(time);
+            else
+                node.setCreated(metadata.getCreated());
+
+            if(metadata.getLastEdited() == -1)
+                node.setLastEdited(time);
+            else
+                node.setLastEdited(metadata.getLastEdited());
+
+            if(metadata.getLastTouched() == -1)
+                node.setLastTouched(time);
+            else
+                node.setLastTouched(metadata.getLastTouched());
+
 
 
             //Adding new node to MetaDataRepository
@@ -326,40 +362,42 @@ public class ParserRequestMetaData implements Parser {
 
                 return false;
             }
+
         //This in case of overwriting a file, we first check that is a file that we are trying to overwrite
         }else if(node.getFileType() == MetadataType.FILE && metadata.getType() != MetadataType.FILE){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a FILE"));
-
                 return false;
+
 
         //This in case of overwriting a dir, we first check that is a dir that we are trying to overwrite
-        }else if(node.getFileType() == MetadataType.DIR && metadata.getType() != MetadataType.DIR){
-                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a DIR"));
-
+        }else if(node.getFileType() == MetadataType.DIR){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR"));
                 return false;
+
         }else{
+
 
             node.setSize(metadata.getSize());
 
-            if(session.getRequest().getUser().equals(metadata.getOwner()) && session.getRequest().getUser().equals(metadata.getGroup())){
-                node.setOwner(metadata.getOwner());
-                node.setGroup(metadata.getGroup());
-                node.setGid(metadata.getGid());
-                node.setUid(metadata.getUid());
-            }else {
-                //TODO Implement ACL
-            }
 
-            node.setCreated(metadata.getCreated());
-            node.setLastEdited(metadata.getLastEdited());
-            node.setLastTouched(metadata.getLastTouched());
-            metaDataRepo.replace(node.getKey(), node);
+            if(metadata.getCreated() != -1)
+                node.setCreated(metadata.getCreated());
+
+            if(metadata.getLastEdited() != -1)
+                node.setLastEdited(metadata.getLastEdited());
+
+            node.setLastTouched(Time.currentTimeMillis());
+
+
         }
 
         //Creates the header for the response
         MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
         response.setMetadata(node);
-        response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
+
+        if(node.getType() == MetadataType.FILE)
+            response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
+
         session.setResponse(response);
 
         return true;

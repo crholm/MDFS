@@ -160,8 +160,8 @@ public class MySQLFetch {
 				
 				node.setStorageName(result.getString("storageName"));
 				node.setPermission(result.getShort("permission"));
-				node.setOwner(result.getString("owner"));
-				node.setGroup(result.getString("group"));
+				node.setUid(result.getInt("uid"));
+				node.setGid(result.getInt("gid"));
 				node.setCreated(result.getLong("created"));
 				node.setLastEdited(result.getLong("lastEdited"));
 				node.setLastTouched(result.getLong("lastTouched"));

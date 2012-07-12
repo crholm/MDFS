@@ -309,8 +309,8 @@ public class MySQLUpdater implements Runnable{
 						 "`fileType`, " +
 						 "`storageName`, " +
 						 "`permission`, " +
-						 "`owner`, " +
-						 "`group`, " +
+						 "`uid`, " +
+						 "`gid`, " +
 						 "`created`, " +
 						 "`lastEdited` ) " +
 				 "values (" +
@@ -319,8 +319,8 @@ public class MySQLUpdater implements Runnable{
 				 			"'" + node.getFileType() + "', " +
 				   		    "'" + node.getStorageName() + "', " +
 				   		    "'" + node.getPermission() + "', " +
-				   		    "'" + node.getOwner() + "', " +
-				   		    "'" + node.getGroup() + "', " +
+				   		    "'" + node.getUid() + "', " +
+				   		    "'" + node.getGid() + "', " +
 				   		    "'" + node.getCreated() + "', " +
 				   		    "'" + node.getLastEdited() + "'" +
 				   		")" +
@@ -330,8 +330,8 @@ public class MySQLUpdater implements Runnable{
 		 				"`fileType` = '" + node.getFileType() + "', " +
 		 				"`storageName` = '" + node.getStorageName() + "', " +
 		 				"`permission` = '" + node.getPermission() + "', " +
-		 				"`owner` = '" + node.getOwner() + "', " +
-		 				"`group` = '" + node.getGroup() + "', " +
+		 				"`uid` = '" + node.getUid() + "', " +
+		 				"`gid` = '" + node.getGid() + "', " +
 		 				"`created` = '" + node.getCreated() + "', " +
 		 				"`lastEdited` = '" + node.getLastEdited() + "' " +
 		 				//"`lastTouched` = '" + node.getLastTouched() + "' " +

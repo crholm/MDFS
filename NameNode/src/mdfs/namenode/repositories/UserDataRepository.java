@@ -265,4 +265,28 @@ public class UserDataRepository {
 	public void save(){
 		
 	}
+
+    public String getName(int uid) {
+        lock.lock();
+        try{
+            UserDataRepositoryNode node = repositoryUid.get(uid);
+            if(node == null)
+                return null;
+            return node.getName();
+        }finally {
+            lock.unlock();
+        }
+    }
+    public int getUid(String name) {
+        lock.lock();
+        try{
+            UserDataRepositoryNode node = repository.get(name);
+            if(node == null)
+                return -1;
+            return node.getUid();
+        }finally {
+            lock.unlock();
+        }
+    }
 }
+

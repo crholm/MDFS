@@ -128,6 +128,13 @@ public class MetaDataRepositoryNode extends MDFSProtocolMetaData{
     @Override
 	public JSONObject toJSON(){
 
+        if(getOwner() == null){
+            setOwner(UserDataRepository.getInstance().getName(getUid()));
+        }
+        if(getGroup() == null){
+            setGroup(GroupDataRepository.getInstance().getName(getGid()));
+        }
+
         if(getType() == MetadataType.FILE){
             setLocation(new MDFSProtocolLocation());
 
