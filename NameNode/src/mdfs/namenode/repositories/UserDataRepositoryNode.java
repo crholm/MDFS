@@ -1,47 +1,43 @@
 package mdfs.namenode.repositories;
 
+import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * A node that holds user data
  * @author Rasmus Holm
  *
  */
-public class UserDataRepositoryNode implements Comparable<UserDataRepositoryNode>{
+public class UserDataRepositoryNode {
 	private int uid;
     private String name;
 	private String pwdHash;
+    private LinkedList<GroupDataRepositoryNode> groups = new LinkedList<GroupDataRepositoryNode>();
+    private ReentrantLock lock = new ReentrantLock(true);
 
-	
+
 	/**
 	 * 
 	 * @param name sets user name
 	 */
-	public UserDataRepositoryNode(String name){
+	public UserDataRepositoryNode(int uid, String name){
 		this.name = name;
+        this.uid = uid;
 	}
 
     public int getUid() {
         return uid;
     }
 
-    public void setUid(int uid) {
-        this.uid = uid;
-    }
 
     /**
 	 * 
 	 * @return the key, the username
 	 */
-	public String getKey(){
+	public String getName(){
 		return name;
 	}
-	/**
-	 * 
-	 * @return the username
-	 */
-	public String getName() {
-		return name;
-	}
-		
+
 	/**
 	 * 
 	 * @return the hash of the password
@@ -57,12 +53,44 @@ public class UserDataRepositoryNode implements Comparable<UserDataRepositoryNode
 		this.pwdHash = pwdHash;
 	}
 
-	/**
-	 * 
-	 */
-	@Override
-	public int compareTo(UserDataRepositoryNode o) {
-		return getName().compareTo(o.getName());
-	}
-	
+    /**
+     *
+     *
+     * @param group
+     * @return
+     */
+    void addedToGroup(GroupDataRepositoryNode group){
+        lock.lock();
+        try{
+            if(groups.contains(group))
+                return;
+            groups.add(group);
+        }finally {
+            lock.lock();
+        }
+
+    }
+
+    void removedFromGroup(GroupDataRepositoryNode group) {
+        lock.lock();
+        try{
+            groups.remove(group);
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    public GroupDataRepositoryNode[] getGroupMembership(){
+        lock.lock();
+        try{
+            int size = groups.size();
+            GroupDataRepositoryNode nodes[] = new GroupDataRepositoryNode[size];
+            nodes = groups.toArray(nodes);
+            return nodes;
+        }finally {
+            lock.unlock();
+        }
+    }
+
+
 }

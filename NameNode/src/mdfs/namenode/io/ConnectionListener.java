@@ -26,7 +26,7 @@ public class ConnectionListener implements Runnable{
 
     @Override
     public void run() {
-        Socket clientSocket = null;
+        Socket clientSocket;
 
         Verbose.print("Listening to port: " + serverSocket.getLocalPort(), this, Config.getInt("verbose"));
         while(true){

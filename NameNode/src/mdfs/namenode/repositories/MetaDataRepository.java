@@ -175,7 +175,7 @@ public class MetaDataRepository {
 			int partition = 512;
 			
 			//Adding MetaData
-			MetaDataRepositoryNode[] nodes = null;
+			MetaDataRepositoryNode[] nodes;
 			for(int i = 0; i < size/partition; i++){
 				
 				//Fetching a number of rows into a MetaDataRepositoryNode[]
@@ -221,8 +221,8 @@ public class MetaDataRepository {
 	 */
 	private boolean loadMetaDataDataNodeRelation(String[][] relations){
 		DataNodeInfoRepository dataNodeReop = DataNodeInfoRepository.getInstance();
-		DataNodeInfoRepositoryNode dataNode = null;
-		MetaDataRepositoryNode metaNode = null;
+		DataNodeInfoRepositoryNode dataNode;
+		MetaDataRepositoryNode metaNode;
 		
 		//Building realation from the array[][]
 		for (String[] relation : relations) {

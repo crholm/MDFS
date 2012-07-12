@@ -107,7 +107,7 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 	/**
 	 * Remove the given element from the tree.
 	 * @param key is the index to element to be removed.
-	 * @return the element removed
+	 * @return the element removed, null if dont exists.
 	 */
 	public E remove(Key key) {
 		splay(key);

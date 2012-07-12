@@ -22,7 +22,7 @@ public class MetaDataRepositoryNode extends MDFSProtocolMetaData{
 	
 
 	public MetaDataRepositoryNode(){
-		String time = Time.getTimeStamp();
+		long time = Time.currentTimeMillis();
 		setCreated(time);
 		setLastEdited(time);
 		setLastTouched(time);

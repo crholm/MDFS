@@ -55,7 +55,7 @@ public class MySQLUpdater implements Runnable{
 	 */
 	@Override
 	public void run() {
-		Connection connection = null;
+		Connection connection;
 			
 		while(true){
 			//Locks the queue 1 and all new query queued in queue2

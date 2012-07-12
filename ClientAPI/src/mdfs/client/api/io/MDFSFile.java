@@ -202,9 +202,9 @@ public class MDFSFile {
         metadata.setPermission(640);
         metadata.setOwner(user);
         metadata.setGroup(user);
-        metadata.setCreated(Time.getTimeStamp());
-        metadata.setLastEdited(Time.getTimeStamp());
-        metadata.setLastTouched(Time.getTimeStamp());
+        metadata.setCreated(Time.currentTimeMillis());
+        metadata.setLastEdited(Time.currentTimeMillis());
+        metadata.setLastTouched(Time.currentTimeMillis());
 
         request.setMetadata(metadata);
 
@@ -477,7 +477,7 @@ public class MDFSFile {
         metadata.setOwner(user);
         metadata.setGroup(user);
 
-        String timestamp = Time.getTimeStamp();
+        long timestamp = Time.currentTimeMillis();
         metadata.setCreated(timestamp);
         metadata.setLastEdited(timestamp);
         metadata.setLastTouched(timestamp);

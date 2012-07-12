@@ -1,10 +1,10 @@
 package mdfs.namenode.sql;
 
+import mdfs.utils.Config;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
-import mdfs.utils.Config;
 
 /**
  * This class creates a connection to the MySQL database that is specified in the mdfs/config/config.cfg
@@ -12,12 +12,12 @@ import mdfs.utils.Config;
  *
  */
 public class MySQLConnector {
-	String user = Config.getString("MySQL.user");
-	String pass = Config.getString("MySQL.pass");
+	private String user = Config.getString("MySQL.user");
+	private String pass = Config.getString("MySQL.pass");
 	String db = Config.getString("MySQL.db");
 	String prefix = Config.getString("MySQL.prefix");
 	
-	 Connection conn = null;
+	 private Connection conn = null;
 	
 	/**
 	 * Creates the connecton to the MySQL database when MySQLConnectior is created

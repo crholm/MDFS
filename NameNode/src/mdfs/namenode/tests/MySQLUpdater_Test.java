@@ -4,6 +4,7 @@ package mdfs.namenode.tests;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
 import mdfs.namenode.sql.MySQLUpdater;
+import mdfs.utils.Time;
 import mdfs.utils.io.protocol.enums.MetadataType;
 
 public class MySQLUpdater_Test {
@@ -16,8 +17,8 @@ public class MySQLUpdater_Test {
 		node.setPermission((short)666);
 		node.setOwner("test1");
 		node.setGroup("test1");
-		node.setCreated("2012-03-20 12:05:42");
-		node.setLastEdited("2012-03-20 12:05:42");
+		node.setCreated(Time.currentTimeMillis());
+		node.setLastEdited(Time.currentTimeMillis());
 		
 		MetaDataRepositoryNode node2 = new MetaDataRepositoryNode();
 		node2.setFilePath("test/node2");
@@ -27,8 +28,8 @@ public class MySQLUpdater_Test {
 		node2.setPermission((short)666);
 		node2.setOwner("test1");
 		node2.setGroup("test1");
-		node2.setCreated("2012-03-20 12:05:42");
-		node2.setLastEdited("2012-03-20 12:05:42");
+		node2.setCreated(Time.currentTimeMillis());
+		node2.setLastEdited(Time.currentTimeMillis());
 		
 		MySQLUpdater sql = MySQLUpdater.getInstance();
 		
@@ -36,7 +37,7 @@ public class MySQLUpdater_Test {
 		sql.updateMetaData(node);
 
 		
-		UserDataRepositoryNode user = new UserDataRepositoryNode("raz");
+		UserDataRepositoryNode user = new UserDataRepositoryNode(82, "raz");
 		user.setPwdHash("dsfoiuh320y9ewsmfpu29fun+28uf+98mfu2ff,siu +943ufj");
 		sql.updateUserData(user);
 		

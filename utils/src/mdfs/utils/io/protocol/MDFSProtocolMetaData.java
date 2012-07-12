@@ -21,9 +21,11 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
     private int permission = -1;
     private String owner;
     private String group;
-    private String created;
-    private String lastEdited;
-    private String lastToutched;
+    private int uid = -1;
+    private int gid = -1;
+    private long created = -1;
+    private long lastEdited = -1;
+    private long lastToutched = -1;
     private MDFSProtocolLocation location;
     private LinkedList<MDFSProtocolMetaData> children;
 
@@ -41,9 +43,11 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             setPermission(jsonObject.optInt("permission", -1));
             setOwner(jsonObject.optString("owner", null));
             setGroup(jsonObject.optString("group", null));
-            setCreated(jsonObject.optString("created", null));
-            setLastEdited(jsonObject.optString("lastEdited", null));
-            setLastTouched(jsonObject.optString("lastToutched", null));
+            setUid(jsonObject.optInt("uid", -1));
+            setGid(jsonObject.optInt("gid", -1));
+            setCreated(jsonObject.optLong("created", -1));
+            setLastEdited(jsonObject.optLong("lastEdited", -1));
+            setLastTouched(jsonObject.optLong("lastToutched", -1));
 
             if(jsonObject.has("Location"))
                 setLocation(new MDFSProtocolLocation(jsonObject.optJSONObject("Location")));
@@ -84,13 +88,19 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             if(getGroup() != null)
                 json.put("group", getGroup());
 
-            if(getCreated() != null)
+            if(getCreated() != -1)
                 json.put("created", getCreated());
 
-            if(getLastEdited() != null)
+            if(getUid() != -1)
+                json.put("uid", getUid());
+
+            if(getGid() != -1)
+                json.put("gid", getGid());
+
+            if(getLastEdited() != -1)
                 json.put("lastEdited", getLastEdited());
 
-            if(getLastTouched() != null)
+            if(getLastTouched() != -1)
                 json.put("lastToutched", getLastTouched());
 
             if(getLocation() != null)
@@ -111,6 +121,23 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         }
 
         return json;
+    }
+
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public int getGid() {
+        return gid;
+    }
+
+    public void setGid(int gid) {
+        this.gid = gid;
     }
 
 
@@ -206,27 +233,27 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
         this.group = group;
     }
 
-    public String getCreated() {
+    public long getCreated() {
         return created;
     }
 
-    public void setCreated(String created) {
+    public void setCreated(long created) {
         this.created = created;
     }
 
-    public String getLastEdited() {
+    public long getLastEdited() {
         return lastEdited;
     }
 
-    public void setLastEdited(String lastEdited) {
+    public void setLastEdited(long lastEdited) {
         this.lastEdited = lastEdited;
     }
 
-    public String getLastTouched() {
+    public long getLastTouched() {
         return lastToutched;
     }
 
-    public void setLastTouched(String lastTouched) {
+    public void setLastTouched(long lastTouched) {
         this.lastToutched = lastTouched;
     }
 

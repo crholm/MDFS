@@ -18,9 +18,9 @@ import java.util.LinkedList;
  *
  */
 public class MySQLFetch {
-	ResultSet rs = null;
-	Statement stmt = null;
-	Connection conn = null;
+	private ResultSet rs = null;
+	private Statement stmt = null;
+	private Connection conn = null;
 	
 	/**
 	 * 
@@ -82,16 +82,15 @@ public class MySQLFetch {
 		createResultSet(query);
 		
 		ResultSet result = getResultSet();
-		UserDataRepositoryNode node = null;
+		UserDataRepositoryNode node;
 		UserDataRepositoryNode[] nodes = null;	
 		
 		try {
 			//Parses the result set in to a LinkedList that will contain all the UserDataReopNodes 
 			LinkedList<UserDataRepositoryNode> list = new LinkedList<UserDataRepositoryNode>();
 			while(result.next()){
-				node = new UserDataRepositoryNode(result.getString("name"));
+				node = new UserDataRepositoryNode(result.getInt("uid"), result.getString("name"));
 				node.setPwdHash(result.getString("pwdHash"));
-                node.setUid(result.getInt("uid"));
 				list.add(node);
 			}
 			
@@ -140,7 +139,7 @@ public class MySQLFetch {
 		ResultSet result = getResultSet();
 		
 		MetaDataRepositoryNode[] nodes = new MetaDataRepositoryNode[length];
-		MetaDataRepositoryNode node = null;
+		MetaDataRepositoryNode node;
 		
 		
 		
@@ -163,9 +162,9 @@ public class MySQLFetch {
 				node.setPermission(result.getShort("permission"));
 				node.setOwner(result.getString("owner"));
 				node.setGroup(result.getString("group"));
-				node.setCreated(result.getString("created"));
-				node.setLastEdited(result.getString("lastEdited"));
-				node.setLastTouched(result.getString("lastTouched"));
+				node.setCreated(result.getLong("created"));
+				node.setLastEdited(result.getLong("lastEdited"));
+				node.setLastTouched(result.getLong("lastTouched"));
 				
 				
 				nodes[i] = node;

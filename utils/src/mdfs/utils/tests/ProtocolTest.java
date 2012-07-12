@@ -38,9 +38,9 @@ public class ProtocolTest {
         metaData.setPermission(764);
         metaData.setOwner("raz");
         metaData.setGroup("raz");
-        metaData.setCreated("125161");
-        metaData.setLastEdited("1234135");
-        metaData.setLastTouched("12352");
+        metaData.setCreated(125161);
+        metaData.setLastEdited(1234135);
+        metaData.setLastTouched(12352);
 
 
         System.out.println(metaData);

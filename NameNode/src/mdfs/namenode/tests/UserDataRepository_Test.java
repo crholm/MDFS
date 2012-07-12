@@ -10,7 +10,7 @@ public class UserDataRepository_Test {
 		UserDataRepository ud = UserDataRepository.getInstance();
 		System.out.println("Building user data...");
 		for(int i = 0; i < 10000; i++){
-			UserDataRepositoryNode d = new UserDataRepositoryNode(Integer.toString(i));
+			UserDataRepositoryNode d = new UserDataRepositoryNode(i, Integer.toString(i));
 			d.setPwdHash(SHA1.quick(Integer.toString(i).getBytes()));
 			ud.addUser(d);
 		}

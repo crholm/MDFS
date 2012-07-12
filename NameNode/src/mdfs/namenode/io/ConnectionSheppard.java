@@ -23,15 +23,15 @@ import java.net.Socket;
  *
  */
 public class ConnectionSheppard implements Runnable{
-	MDFSProtocolHeader request;
-	Socket connection;
-	InputStream in;
-	OutputStream out;
+	private MDFSProtocolHeader request;
+	private Socket connection;
+	private InputStream in;
+	private OutputStream out;
 	String tmpFileName;
 	
 	//The session is wrapping both the request, the parser and its response
-	Session session = new SessionImpl();
-	SocketFunctions socketFunctions = new SocketFunctions();
+    private Session session = new SessionImpl();
+	private SocketFunctions socketFunctions = new SocketFunctions();
 	
 	/**
 	 * Creats a instant of a ConnectionSheppard that handles a connection from start to end.

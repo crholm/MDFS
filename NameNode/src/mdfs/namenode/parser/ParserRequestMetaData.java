@@ -52,7 +52,7 @@ public class ParserRequestMetaData implements Parser {
 	 */
 	private boolean authUser(String user, String pass){
 		UserDataRepository userData = UserDataRepository.getInstance();
-		return userData.authUser(user, pass);		
+		return userData.authUser(user, pass);
 	}
 	
 	/*
@@ -68,8 +68,8 @@ public class ParserRequestMetaData implements Parser {
 	@Override
 	public boolean parse(Session session) {
 		this.session = session;
-		String user = null;
-		String pass = null;
+		String user;
+		String pass;
 
         user = session.getRequest().getUser();
         pass = session.getRequest().getPass();
@@ -169,7 +169,7 @@ public class ParserRequestMetaData implements Parser {
 
         //Creates a response for the removal
 
-        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);;
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
         response.getInfo().setRemoved(EventStatus.SUCCESSFUL);
         response.setMetadata(node);
 
@@ -293,8 +293,21 @@ public class ParserRequestMetaData implements Parser {
             node = new MetaDataRepositoryNode();
             node.setFilePath(metadata.getPath());
             node.setSize(metadata.getSize());
-            node.setOwner(metadata.getOwner());
-            node.setGroup(metadata.getGroup());
+
+
+
+            if(session.getRequest().getUser().equals(metadata.getOwner()) && session.getRequest().getUser().equals(metadata.getGroup())){
+                node.setOwner(metadata.getOwner());
+                node.setGroup(metadata.getGroup());
+
+
+
+                node.setGid(metadata.getGid());
+                node.setUid(metadata.getUid());
+            }else {
+                //TODO Implement ACL
+            }
+
             node.setPermission(metadata.getPermission());
             node.setCreated(metadata.getCreated());
             node.setLastEdited(metadata.getLastEdited());
@@ -314,32 +327,32 @@ public class ParserRequestMetaData implements Parser {
                 return false;
             }
         //This in case of overwriting a file, we first check that is a file that we are trying to overwrite
-        }else if(node.getFileType() == MetadataType.FILE){
-            if(metadata.getType() != MetadataType.FILE){
+        }else if(node.getFileType() == MetadataType.FILE && metadata.getType() != MetadataType.FILE){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a FILE"));
 
                 return false;
-            }
 
         //This in case of overwriting a dir, we first check that is a dir that we are trying to overwrite
-        }else if(node.getFileType() == MetadataType.DIR){
-            if(metadata.getType() != MetadataType.DIR){
+        }else if(node.getFileType() == MetadataType.DIR && metadata.getType() != MetadataType.DIR){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "can not overwrite a DIR with a DIR"));
 
                 return false;
-            }
-        /*
-         * TODO: Bug would aper here in the case of overwriting the nested else if if statemets above
-         * 		 should be change to only one else if statement, teste must be done.
-         * 	ex:	 else if(node.getFileType() == DataTypeEnum.DIR && !metaDataJson.getString("type").equals("dir"))
-         */
         }else{
+
             node.setSize(metadata.getSize());
-            node.setOwner(metadata.getOwner());
-            node.setGroup(metadata.getGroup());
+
+            if(session.getRequest().getUser().equals(metadata.getOwner()) && session.getRequest().getUser().equals(metadata.getGroup())){
+                node.setOwner(metadata.getOwner());
+                node.setGroup(metadata.getGroup());
+                node.setGid(metadata.getGid());
+                node.setUid(metadata.getUid());
+            }else {
+                //TODO Implement ACL
+            }
+
             node.setCreated(metadata.getCreated());
             node.setLastEdited(metadata.getLastEdited());
-            node.setLastTouched(metadata.getLastTouched());;
+            node.setLastTouched(metadata.getLastTouched());
             metaDataRepo.replace(node.getKey(), node);
         }
 

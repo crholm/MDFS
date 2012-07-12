@@ -23,9 +23,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class UserDataRepository {
 	
 	
-	private SplayTree<String, UserDataRepositoryNode> repository = new SplayTree<String, UserDataRepositoryNode>();
     private SplayTree<Integer, UserDataRepositoryNode> repositoryUid = new SplayTree<Integer, UserDataRepositoryNode>();
-	private ReentrantLock lock = new ReentrantLock(true);
+    private SplayTree<String, UserDataRepositoryNode> repository = new SplayTree<String, UserDataRepositoryNode>();
+    private ReentrantLock lock = new ReentrantLock(true);
 	private static UserDataRepository instance= null;
     private int uidCounter = 1000;
 	
@@ -63,11 +63,15 @@ public class UserDataRepository {
 		boolean result = false;
 		try{
 			//Makes sure the user dose not exist
-			if(!repository.containsKey(node.getKey())){
+			if(!repository.containsKey(node.getName()) && !repositoryUid.containsKey(node.getUid()) ){
 				
 				//Adds user to repo
-				repository.put(node.getKey(), node);
+				repository.put(node.getName(), node);
                 repositoryUid.put(node.getUid(), node);
+
+                //Creating home group and adding user to it.
+                GroupDataRepositoryNode group = GroupDataRepository.getInstance().addGroup(node.getUid(), node.getName());
+                group.addUser(node);
 				
 				//Creates the home dir for the new user
 				MetaDataRepositoryNode homeDir = new MetaDataRepositoryNode();
@@ -75,13 +79,15 @@ public class UserDataRepository {
 				homeDir.setFileType(MetadataType.DIR);
 
                 //TODO fix this. should be time in milli sec, not a date.
-                String time = Time.getTimeStamp();
+                long time = Time.currentTimeMillis();
                 homeDir.setCreated(time);
 				homeDir.setLastEdited(time);
 
                 //TODO fix this. owner and groupe are not text but uid and gid
 				homeDir.setOwner(node.getName());
 				homeDir.setGroup(node.getName());
+
+
 				
 				//Adds the new dir to the repo
 				MetaDataRepository.getInstance().add(homeDir.getKey(), homeDir);
@@ -98,7 +104,31 @@ public class UserDataRepository {
 		
 		return result;
 	}
-	
+
+
+    /**
+     * 1. Adds a user in the form a {@link UserDataRepositoryNode} but generated from name and pass to the Repository where the key is the username
+     * 2. Creates a home dir for the new user.
+     * 3. Updates permanent storage with new user.
+     * @param name the username of the new user
+     * @param pass the cleartext password of the new user
+     * @return true if successful, false if it is preexisting
+     */
+    public boolean addUser(String name, String pass){
+        lock.lock();
+        boolean result = false;
+        try{
+            UserDataRepositoryNode node = new UserDataRepositoryNode(uidCounter++, name);
+            node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));
+            result = addUser(node);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } finally{
+            lock.unlock();
+        }
+        return result;
+    }
+
 	/**
 	 * Removes a user from the repository.
 	 * @param name the name of the user to be removed
@@ -111,6 +141,8 @@ public class UserDataRepository {
 			result = repository.remove(name);
 			if(result != null)
                 result = repositoryUid.remove(result.getUid());
+                removeUserFromGroups(result);
+
 				MySQLUpdater.getInstance().removeUserData(result);
 		}finally{
 			lock.unlock();
@@ -122,37 +154,21 @@ public class UserDataRepository {
         UserDataRepositoryNode result;
         try{
             result = getUser(uid);
-            removeUser(result.getName());
+            result = removeUser(result.getName());
 
         }finally{
             lock.unlock();
         }
         return result;
     }
+
+    private void removeUserFromGroups(UserDataRepositoryNode user){
+        GroupDataRepositoryNode[] groups = user.getGroupMembership();
+        for(GroupDataRepositoryNode group : groups)
+            group.removeUser(user);
+    }
 	
-	/**
-	 * 1. Adds a user in the form a {@link UserDataRepositoryNode} but generated from name and pass to the Repository where the key is the username
-	 * 2. Creates a home dir for the new user.
-	 * 3. Updates permanent storage with new user.
-	 * @param name the username of the new user
-	 * @param pass the cleartext password of the new user
-	 * @return true if successful, false if it is preexisting
-	 */
-	public boolean addUser(String name, String pass){
-		lock.lock();
-		boolean result = false;
-		try{
-			UserDataRepositoryNode node = new UserDataRepositoryNode(name);
-			node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));
-            node.setUid(uidCounter++);
-			result = addUser(node);		
-		} catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } finally{
-			lock.unlock();
-		}
-		return result;
-	}
+
 	
 	/**
 	 * Fetches the user from the repository
@@ -238,7 +254,7 @@ public class UserDataRepository {
 		MySQLFetch sql = new MySQLFetch();
 		UserDataRepositoryNode[] nodes = sql.getUserDataRepositoryNodes();
 		for (UserDataRepositoryNode node : nodes) {
-			repository.put(node.getKey(), node);
+			repository.put(node.getName(), node);
             repositoryUid.put(node.getUid(), node);
 		}
 		

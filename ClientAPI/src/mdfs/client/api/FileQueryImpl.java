@@ -432,9 +432,9 @@ public class FileQueryImpl implements FileQuery{
             metadata.setPermission(640);
             metadata.setOwner(user);
             metadata.setGroup(user);
-            metadata.setCreated(Time.getTimeStamp(sourceFile.lastModified()));
-            metadata.setLastEdited(Time.getTimeStamp(sourceFile.lastModified()));
-            metadata.setLastTouched(Time.getTimeStamp());
+            metadata.setCreated(sourceFile.lastModified());
+            metadata.setLastEdited(sourceFile.lastModified());
+            metadata.setLastTouched(Time.currentTimeMillis());
 
             request.setMetadata(metadata);
 
@@ -592,7 +592,7 @@ public class FileQueryImpl implements FileQuery{
         metadata.setOwner(user);
         metadata.setGroup(user);
 
-        String timestamp = Time.getTimeStamp();
+        long timestamp = Time.currentTimeMillis();
         metadata.setCreated(timestamp);
         metadata.setLastEdited(timestamp);
         metadata.setLastTouched(timestamp);
