@@ -36,6 +36,16 @@ public class FileNameOperations {
 	
 		return newPath;
 	}
+
+    public String parentPath(String path){
+        path = path.trim();
+        String dirs[] = path.split("/");
+        path = "";
+        for(int i = 0; i < dirs.length-1; i++){
+            path += "/" + dirs[i];
+        }
+        return path;
+    }
 	
 	/**
 	 * Escapes relative and abstract path to a full path
@@ -48,7 +58,7 @@ public class FileNameOperations {
 	 * @return the path escaped
 	 */
 	public String escapePath(String path, String currentPath, String user){
-		String newPath = "";
+		String newPath;
 		if(path.charAt(0) == '/'){
 			newPath = path;
 		}else if(path.charAt(0) == '~'){
@@ -89,10 +99,8 @@ public class FileNameOperations {
 		int index = splitPath[splitPath.length-1].hashCode();
 		
 		int location = Math.abs((int)(index % storageLocation.length));
-		
-		String[] fullPath = (String[]) ArrayUtils.addAll( storageLocation[location].split(fileseparator), splitPath );
-		
-		return fullPath;
+
+		return (String[]) ArrayUtils.addAll( storageLocation[location].split(fileseparator), splitPath );
 	}
 	
 	/**

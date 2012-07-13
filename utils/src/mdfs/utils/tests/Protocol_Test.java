@@ -15,7 +15,7 @@ import org.json.JSONException;
  * @author Rasmus Holm
  * @version 1.0
  */
-public class ProtocolTest {
+public class Protocol_Test {
     public static void main(String args[]){
         System.out.println(Stage.REQUEST);
         System.out.println(Stage.RESPONSE);

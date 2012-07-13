@@ -14,8 +14,6 @@ import mdfs.utils.parser.FileNameOperations;
 import mdfs.utils.parser.Parser;
 import mdfs.utils.parser.Session;
 
-import java.util.LinkedList;
-
 
 /**
  * A Parser implementing Parser that handles all Modes when Stage = Request and Type = Meta-Data 
@@ -27,6 +25,7 @@ public class ParserRequestMetaData implements Parser {
 	private Mode mode;
 	private Session session;
 	private String errorMsg = "";
+    private UserDataRepositoryNode user;
 	
 	/**
 	 * 
@@ -38,20 +37,13 @@ public class ParserRequestMetaData implements Parser {
 	
 	/**
 	 * If an error happens this returns the Error Message
-	 * @return
+	 * @return error message
 	 */
 	public String getErrorMsg(){
 		return errorMsg;
 	}
 	
-	/*
-	 * Verify the user tyring to access and/or modify the stored meta-data
-	 */
-	private boolean authUser(String user, String pass){
-		UserDataRepository userData = UserDataRepository.getInstance();
-		return userData.authUser(user, pass);
-	}
-	
+
 	/*
 	 * Sets a error message and prints it
 	 * 
@@ -65,21 +57,23 @@ public class ParserRequestMetaData implements Parser {
 	@Override
 	public boolean parse(Session session) {
 		this.session = session;
-		String user;
+
 		String pass;
 
-        user = session.getRequest().getUser();
+        UserDataRepository userdata = UserDataRepository.getInstance();
+        user = userdata.getUser(session.getRequest().getUser());
         pass = session.getRequest().getPass();
+
         //Checks so that user credentials are provided
         if(user == null || pass == null){
             //Creates Error Response
-            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "No full user or password was given in request" ));
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "In valid user or password" ));
             setErrorMsg("User or Pass was not included in Header");
 
             return false;
         }
         //Checks so that the user credentials are correct
-        if(!authUser(user, pass)){
+        if(!userdata.authUser(user, pass)){
             //Creates a error response
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "In valid user or password"));
             setErrorMsg("User or pass was wrong");
@@ -135,25 +129,34 @@ public class ParserRequestMetaData implements Parser {
         //Fetches the full path to the file in MDFS
         String path = metadata.getPath();
 
+
+        MetaDataRepositoryNode node = metaDataRepo.get(path);
+        //If node==null the file did not exist.
+        if(node == null){
+            //Creates a error response
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " cannot remove " + path +": No such file or directory"));
+            return false;
+        }
+
+        //Checks so that user are allowed to remove file or dir
+        if(!new ACL().operationAllowed(ACLEnum.WRITE, user, node)){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+            return false;
+        }
+
         //Checks so that the file/dir dose not have children
         if(metaDataRepo.hasChildren(path)){
-
             //Creates a error response
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode,"failed to remove " + path +": Directory not empty "));
             return false;
         }
 
+
+
         //If the file/dir did note have children, it is removed from the Repository and are
         //returned in to node
-        MetaDataRepositoryNode node = metaDataRepo.remove(path);
+        node = metaDataRepo.remove(path);
 
-        //If node==null the file did not exist.
-        if(node == null){
-
-            //Creates a error response
-            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " cannot remove " + path +": No such file or directory"));
-            return false;
-        }
 
         /* If the node represents a File all the raw data stored at the datanodes has to be removed aswell
         *  This since dir:s only exists as metadata on the name node while files reside on the NameNode as
@@ -211,6 +214,13 @@ public class ParserRequestMetaData implements Parser {
             return false;
         }
 
+        //Checks so that user are allowed to remove file or dir
+        if(!new ACL().operationAllowed(ACLEnum.READ, user, node)){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+            return false;
+        }
+
+
 
         //Creating a response header
         MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
@@ -220,7 +230,12 @@ public class ParserRequestMetaData implements Parser {
         //If the file request is a dir.
         if(node.getFileType() == MetadataType.DIR){
 
-            LinkedList<MDFSProtocolMetaData> children = new LinkedList<MDFSProtocolMetaData>();
+            //Checks so that user are allowed to open dir file or dir
+            if(!new ACL().operationAllowed(ACLEnum.EXECUTE, user, node)){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+                return false;
+            }
+
 
             //Fetching all the childern, if any of the dir an building the response
             MetaDataRepositoryNode[] nodes = metaDataRepo.getChildren(filePath);
@@ -283,21 +298,35 @@ public class ParserRequestMetaData implements Parser {
 
         //Fetches the node that are to be written to, in case it is to be overwritten
         MetaDataRepositoryNode node = metaDataRepo.get(filePath);
-
         /*
          * File or Dir to write dose not exist previously
          */
         if(node == null){
+            MetaDataRepositoryNode parent = metaDataRepo.getParent(filePath);
+
+            if(parent == null){
+                //This happens if one is trying to add a file or dir of which the parent dirs dose not exist
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "File could not be added to the FS, No such file or directory"));
+                return false;
+            }
+
+            //Checks so that user are allowed to open parent dir
+            if(!new ACL().operationAllowed(ACLEnum.EXECUTE, user, parent)){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Parent directory could not be opened"));
+                return false;
+            }
+            //Checks so that user are allowed to write new file to parent dir
+            if(!new ACL().operationAllowed(ACLEnum.WRITE, user, parent)){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+                return false;
+            }
 
 
-            //TODO Check that all values are present in MetaData from Client
             //Creates the new node with the metadata to be stored in the repository
             node = new MetaDataRepositoryNode();
 
             node.setFilePath(metadata.getPath());
             node.setFileType(metadata.getType());
-
-
 
 
             if(node.getType() == MetadataType.FILE)
@@ -317,7 +346,7 @@ public class ParserRequestMetaData implements Parser {
 
 
         //Sets File/Dir size
-            if(node.getType() == MetadataType.FILE)
+            if(node.getType() == MetadataType.DIR)
                 node.setSize(0);
             else
                 node.setSize(metadata.getSize());
@@ -348,10 +377,7 @@ public class ParserRequestMetaData implements Parser {
             else
                 node.setLastEdited(metadata.getLastEdited());
 
-            if(metadata.getLastTouched() == -1)
-                node.setLastTouched(time);
-            else
-                node.setLastTouched(metadata.getLastTouched());
+            node.setLastTouched(time);
 
 
 
@@ -376,6 +402,11 @@ public class ParserRequestMetaData implements Parser {
 
         }else{
 
+            //Checks so that user are allowed to write to existing file
+            if(!new ACL().operationAllowed(ACLEnum.WRITE, user, node)){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+                return false;
+            }
 
             node.setSize(metadata.getSize());
 
@@ -420,7 +451,8 @@ public class ParserRequestMetaData implements Parser {
         if(metadata == null){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
             return false;
-        }else if(metadata.getPath() == null ){
+        }
+        if(metadata.getPath() == null ){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
             return false;
         }

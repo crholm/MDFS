@@ -1,5 +1,6 @@
-package mdfs.utils.crypto;
+package mdfs.utils.tests;
 
+import mdfs.utils.crypto.PRG;
 import mdfs.utils.crypto.engines.HC128;
 import mdfs.utils.crypto.engines.Salsa20;
 import mdfs.utils.crypto.engines.SosemanukFast;
@@ -8,7 +9,7 @@ import mdfs.utils.crypto.engines.SosemanukSlow;
 import java.math.BigInteger;
 import java.util.Random;
 
-public class Test {
+public class PRG_Test {
 	
 	static BigInteger key = new BigInteger(128, new Random());
 	static BigInteger iv = new BigInteger(128, new Random());
@@ -48,7 +49,6 @@ public class Test {
 			prg0.processBytes(m0.getBytes(), 0, m0.getBytes().length, c0, 0);
 			
 			
-			byte m0c[] = new byte[c0.length];
 			prg0 = prg0.getNewPRG();
 			prg0.init(key.toByteArray(), iv.toByteArray());
 			prg0.processBytes(c0, 0, c0.length);

@@ -4,6 +4,7 @@ import mdfs.namenode.sql.MySQLFetch;
 import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.FSTree;
 import mdfs.utils.io.protocol.enums.MetadataType;
+import mdfs.utils.parser.FileNameOperations;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -54,6 +55,15 @@ public class MetaDataRepository {
 		}
 		return node;
 	}
+    public MetaDataRepositoryNode getParent(String key) {
+        lock.lock();
+        try{
+            MetaDataRepositoryNode node = get(new FileNameOperations().parentPath(key));
+            return node;
+        }finally {
+            lock.unlock();
+        }
+    }
 	
 	public boolean hasChildren(String key) {
 		lock.lock();
@@ -162,7 +172,6 @@ public class MetaDataRepository {
 	
 	/**
      * Load the MetaDataRepositority from permanent storage
-     * @return true is successful, false otherwise
      */
 	public void load() {
 		lock.lock();
@@ -265,8 +274,6 @@ public class MetaDataRepository {
 			lock.unlock();
 		}
 	}
-
-	
 
 
 }
