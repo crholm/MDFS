@@ -1,5 +1,7 @@
 package mdfs.namenode.repositories;
 
+import mdfs.namenode.sql.MySQLUpdater;
+
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -37,7 +39,8 @@ public class GroupDataRepositoryNode {
                 return false;
             users.add(node);
             node.addedToGroup(this);
-            //TODO Implement add to SQL
+            MySQLUpdater.getInstance().updateRelation(this, node);
+
             return true;
         }finally {
             lock.unlock();
@@ -49,7 +52,10 @@ public class GroupDataRepositoryNode {
         try{
             boolean r = users.remove(node);
             node.removedFromGroup(this);
-            //TODO Implement remove from SQL
+
+            if(r)
+                MySQLUpdater.getInstance().removeRelation(this, node);
+
             return r;
         }finally {
             lock.unlock();

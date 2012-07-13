@@ -104,9 +104,9 @@ public class MetaDataRepository {
 		lock.lock();
 		try{
 			node = repository.remove(key);
-			//node == null if it did not exist in the repo
+
 			if(node != null)
-				MySQLUpdater.getInstance().deleteMetaData(key);
+				MySQLUpdater.getInstance().remove(node);
 		}finally{
 			lock.unlock();
 		}
@@ -116,16 +116,16 @@ public class MetaDataRepository {
 	/**
      * Adds a node to the repository as well as to permanent storage
      * @param key is the same as the logical path the file/node in MDFS
-     * @param metaData is the {@link MetaDataRepositoryNode} that is to be added
+     * @param metadata is the {@link MetaDataRepositoryNode} that is to be added
      * @return true is successful, false otherwise
      */
-	public boolean add(String key, MetaDataRepositoryNode metaData) {
+	public boolean add(String key, MetaDataRepositoryNode metadata) {
 		boolean b = false;
 		lock.lock();
 		try{
-			b = repository.put(key, metaData);
+			b = repository.put(key, metadata);
 			if(b)
-				MySQLUpdater.getInstance().updateMetaData(metaData);
+				MySQLUpdater.getInstance().update(metadata);
 		}finally{
 			lock.unlock();
 		}
@@ -135,16 +135,16 @@ public class MetaDataRepository {
 	/**
      * Replaces a node in repository
      * @param key the key of the node to be replaced
-     * @param metaData the meta data that will replace the old
+     * @param metadata the meta data that will replace the old
      * @return node that was replaces, null if node did not exist
      */
-	public MetaDataRepositoryNode replace(String key, MetaDataRepositoryNode metaData) {
+	public MetaDataRepositoryNode replace(String key, MetaDataRepositoryNode metadata) {
 		MetaDataRepositoryNode node = null;
 		lock.lock();
 		try{
-			node = repository.replace(key, metaData);
-			//TODO: implement updating the SQL
-			//MySQLUpdater.getInstance().updateMetaData(metaData);
+			node = repository.replace(key, metadata);
+
+			MySQLUpdater.getInstance().update(metadata);
 		}finally{
 			lock.unlock();
 		}
@@ -156,13 +156,16 @@ public class MetaDataRepository {
 	 * @param nodes to be added
 	 * @return true is successful, false otherwise
 	 */
-	public boolean add(MetaDataRepositoryNode[] nodes){
+	public boolean add(MetaDataRepositoryNode[] nodes, boolean sqlUpdate){
 		lock.lock();
 		boolean result = true;
+
 		try{
 			for (MetaDataRepositoryNode node : nodes) {
-				if(!add(node.getKey(), node))
+                if(!repository.put(node.getKey(), node));
 					result = false;
+                if(sqlUpdate)
+                    MySQLUpdater.getInstance().update(node);
 			}
 		}finally{
 			lock.unlock();
@@ -191,13 +194,13 @@ public class MetaDataRepository {
 				nodes = sql.getMetaDataReopsitoryNodes(i*partition, partition);
 				
 				//Adding the nodes to the repository, without the location of the raw data.
-				add(nodes);
+				add(nodes, false);
 			}
 			//Fetching a number of rows into a MetaDataRepositoryNode[], this is what remains after the partitioning
 			nodes = sql.getMetaDataReopsitoryNodes(((int)(size/partition)) * partition, size%partition);
 			
 			//Adding the nodes to the repository, without the location of the raw data.
-			add(nodes);
+			add(nodes, false);
 			
 			
 			//Adding location to MetaData, building the relation between a file and its location on a DataNode
@@ -262,12 +265,13 @@ public class MetaDataRepository {
 	public void clear() {
 		lock.lock();
 		try{
+            //TODO fix gorup implementation and all.
 			MetaDataRepositoryNode deafualtNode = new MetaDataRepositoryNode();
 			deafualtNode.setOwner("root");
 			deafualtNode.setGroup("root");
 			deafualtNode.setFileType(MetadataType.DIR);
 			deafualtNode.setFilePath("/");
-			deafualtNode.setPermission((short)774);
+			deafualtNode.setPermission((short)775);
 			deafualtNode.setSize(0);
 			repository = new FSTree<MetaDataRepositoryNode>("/", "/", deafualtNode);
 		}finally{

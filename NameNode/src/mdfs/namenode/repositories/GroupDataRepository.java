@@ -1,5 +1,6 @@
 package mdfs.namenode.repositories;
 
+import mdfs.namenode.sql.MySQLUpdater;
 import mdfs.utils.SplayTree;
 
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,14 +27,16 @@ public class GroupDataRepository {
 
     /**
      *
+     *
      * @param name
      * @return new groupe, null if it already exists
      */
-    public GroupDataRepositoryNode addGroup(String name){
+    public GroupDataRepositoryNode add(String name){
         lock.unlock();
         try{
-            GroupDataRepositoryNode node = addGroup(gidCounter, name);
+            GroupDataRepositoryNode node = add(gidCounter, name);
 
+            //TODO save new counter to sql
             if(node != null)
                 gidCounter++;
 
@@ -45,11 +48,12 @@ public class GroupDataRepository {
 
     /**
      *
+     *
      * @param gid
      * @param name
      * @return new group, null if it already exists
      */
-    public GroupDataRepositoryNode addGroup(int gid, String name){
+    public GroupDataRepositoryNode add(int gid, String name){
         lock.lock();
         try{
             if(repository.contains(name))
@@ -61,6 +65,8 @@ public class GroupDataRepository {
             GroupDataRepositoryNode node = new GroupDataRepositoryNode(gid, name);
             repository.put(node.getName(), node);
             repositoryGid.put(node.getGid(), node);
+
+            MySQLUpdater.getInstance().update(node);
             return node;
 
         }finally {
@@ -68,7 +74,7 @@ public class GroupDataRepository {
         }
     }
 
-    public GroupDataRepositoryNode getGroup(int gid){
+    public GroupDataRepositoryNode get(int gid){
         lock.lock();
         try{
             return repositoryGid.get(gid);
@@ -76,7 +82,7 @@ public class GroupDataRepository {
             lock.unlock();
         }
     }
-    public GroupDataRepositoryNode getGroup(String name){
+    public GroupDataRepositoryNode get(String name){
         lock.lock();
         try{
             return repository.get(name);
@@ -109,7 +115,7 @@ public class GroupDataRepository {
     }
 
 
-    public GroupDataRepositoryNode removeGroup(int gid){
+    public GroupDataRepositoryNode remove(int gid){
         lock.lock();
         try{
             GroupDataRepositoryNode node = repositoryGid.remove(gid);
@@ -119,12 +125,13 @@ public class GroupDataRepository {
 
             repository.remove(node.getName());
 
+            MySQLUpdater.getInstance().remove(node);
             return node;
         }finally {
             lock.unlock();
         }
     }
-    public GroupDataRepositoryNode removeGroup(String name){
+    public GroupDataRepositoryNode remove(String name){
         lock.lock();
         try{
             GroupDataRepositoryNode node = repository.remove(name);
@@ -133,7 +140,7 @@ public class GroupDataRepository {
                 return null;
 
             repositoryGid.remove(node.getGid());
-
+            MySQLUpdater.getInstance().remove(node);
             return node;
         }finally {
             lock.unlock();
@@ -141,6 +148,6 @@ public class GroupDataRepository {
     }
 
 
-
+    //TODO Implement load repo and user relations.
 
 }

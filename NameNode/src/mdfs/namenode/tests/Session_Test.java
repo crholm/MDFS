@@ -12,7 +12,7 @@ public class Session_Test {
 		System.out.println("Trying writing:");
 		
 		System.out.println("Adding user: " + 
-		userRepo.addUser("raz", "qwerty"));
+		userRepo.add("raz", "qwerty"));
 		SessionImpl session = new SessionImpl();
 		/*
         System.out.println("Adding Json string: " +

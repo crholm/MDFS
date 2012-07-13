@@ -42,7 +42,7 @@ public class ACL {
                     break;
 
 
-                GroupDataRepositoryNode group = GroupDataRepository.getInstance().getGroup(file.getGid());
+                GroupDataRepositoryNode group = GroupDataRepository.getInstance().get(file.getGid());
                 if(group == null)
                     break;
 
@@ -63,7 +63,7 @@ public class ACL {
                 if(user != null)
                     break;
 
-                inGroup = GroupDataRepository.getInstance().getGroup(file.getGid()).containsUser(user);
+                inGroup = GroupDataRepository.getInstance().get(file.getGid()).containsUser(user);
                 if(inGroup && (g >> 1)%2 == 1)
                     return true;
 
@@ -79,7 +79,7 @@ public class ACL {
                 if(user != null)
                     break;
 
-                inGroup = GroupDataRepository.getInstance().getGroup(file.getGid()).containsUser(user);
+                inGroup = GroupDataRepository.getInstance().get(file.getGid()).containsUser(user);
                 if(inGroup && (g%4%2) == 1)
                     return true;
 

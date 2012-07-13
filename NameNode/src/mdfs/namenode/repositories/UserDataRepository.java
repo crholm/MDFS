@@ -54,10 +54,11 @@ public class UserDataRepository {
 	 * 1. Adds a user in the form a {@link UserDataRepositoryNode} to the Repository where the key is the username.
 	 * 2. Creates a home dir for the new user.
 	 * 3. Updates permanent storage with new user.
-	 * @param node the UserDataRepository node to add to repositori
-	 * @return true if successful, false if it is preexisting
+	 *
+     * @param node the UserDataRepository node to add to repositori
+     * @return true if successful, false if it is preexisting
 	 */
-	public boolean addUser(UserDataRepositoryNode node){
+	public boolean add(UserDataRepositoryNode node){
 		
 		lock.lock();
 		boolean result = false;
@@ -70,7 +71,7 @@ public class UserDataRepository {
                 repositoryUid.put(node.getUid(), node);
 
                 //Creating home group and adding user to it.
-                GroupDataRepositoryNode group = GroupDataRepository.getInstance().addGroup(node.getUid(), node.getName());
+                GroupDataRepositoryNode group = GroupDataRepository.getInstance().add(node.getUid(), node.getName());
                 group.addUser(node);
 				
 				//Creates the home dir for the new user
@@ -78,12 +79,11 @@ public class UserDataRepository {
 				homeDir.setFilePath("/" + node.getName());
 				homeDir.setFileType(MetadataType.DIR);
 
-                //TODO fix this. should be time in milli sec, not a date.
+
                 long time = Time.currentTimeMillis();
                 homeDir.setCreated(time);
 				homeDir.setLastEdited(time);
 
-                //TODO fix this. owner and groupe are not text but uid and gid
 				homeDir.setOwner(node.getName());
 				homeDir.setGroup(node.getName());
 
@@ -93,8 +93,7 @@ public class UserDataRepository {
 				MetaDataRepository.getInstance().add(homeDir.getKey(), homeDir);
 				
 				//Writes the new user to permanent storage
-				MySQLUpdater.getInstance().updateUserData(node);
-                //TODO Save user counter.
+				MySQLUpdater.getInstance().update(node);
 
 				result = true;
 			}
@@ -110,17 +109,20 @@ public class UserDataRepository {
      * 1. Adds a user in the form a {@link UserDataRepositoryNode} but generated from name and pass to the Repository where the key is the username
      * 2. Creates a home dir for the new user.
      * 3. Updates permanent storage with new user.
+     *
      * @param name the username of the new user
      * @param pass the cleartext password of the new user
      * @return true if successful, false if it is preexisting
      */
-    public boolean addUser(String name, String pass){
+    public boolean add(String name, String pass){
         lock.lock();
         boolean result = false;
         try{
+            //TODO Save user counter.
             UserDataRepositoryNode node = new UserDataRepositoryNode(uidCounter++, name);
+
             node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));
-            result = addUser(node);
+            result = add(node);
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         } finally{
@@ -131,30 +133,31 @@ public class UserDataRepository {
 
 	/**
 	 * Removes a user from the repository.
-	 * @param name the name of the user to be removed
-	 * @return the removed users
+	 *
+     * @param name the name of the user to be removed
+     * @return the removed users
 	 */
-	public UserDataRepositoryNode removeUser(String name){
+	public UserDataRepositoryNode remove(String name){
 		lock.lock();
 		UserDataRepositoryNode result;
 		try{
 			result = repository.remove(name);
-			if(result != null)
+			if(result != null) {
                 result = repositoryUid.remove(result.getUid());
                 removeUserFromGroups(result);
-
-				MySQLUpdater.getInstance().removeUserData(result);
+				MySQLUpdater.getInstance().remove(result);
+            }
 		}finally{
 			lock.unlock();
 		}
 		return result;
 	}
-    public UserDataRepositoryNode removeUser(int uid){
+    public UserDataRepositoryNode remove(int uid){
         lock.lock();
         UserDataRepositoryNode result;
         try{
-            result = getUser(uid);
-            result = removeUser(result.getName());
+            result = get(uid);
+            result = remove(result.getName());
 
         }finally{
             lock.unlock();
@@ -172,10 +175,11 @@ public class UserDataRepository {
 	
 	/**
 	 * Fetches the user from the repository
-	 * @param name the username of the user that is requested
-	 * @return the user, null if  it dose not exist
+	 *
+     * @param name the username of the user that is requested
+     * @return the user, null if  it dose not exist
 	 */
-	public UserDataRepositoryNode getUser(String name){
+	public UserDataRepositoryNode get(String name){
 		lock.lock();
 		UserDataRepositoryNode node = null;
 		try{
@@ -186,7 +190,7 @@ public class UserDataRepository {
 		return node;
 	}
 
-    public UserDataRepositoryNode getUser(int uid){
+    public UserDataRepositoryNode get(int uid){
         lock.lock();
         UserDataRepositoryNode node = null;
         try{
@@ -207,7 +211,7 @@ public class UserDataRepository {
 		lock.lock();
 		boolean result = false;
 		try{
-			UserDataRepositoryNode user = getUser(name);
+			UserDataRepositoryNode user = get(name);
 			result = authUser(user, password);
 		}finally{
 			lock.unlock();
@@ -218,7 +222,7 @@ public class UserDataRepository {
         lock.lock();
         boolean result = false;
         try{
-            UserDataRepositoryNode user = getUser(uid);
+            UserDataRepositoryNode user = get(uid);
             result = authUser(user, password);
         }finally{
             lock.unlock();

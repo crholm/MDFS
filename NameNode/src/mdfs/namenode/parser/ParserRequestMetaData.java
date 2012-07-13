@@ -61,7 +61,7 @@ public class ParserRequestMetaData implements Parser {
 		String pass;
 
         UserDataRepository userdata = UserDataRepository.getInstance();
-        user = userdata.getUser(session.getRequest().getUser());
+        user = userdata.get(session.getRequest().getUser());
         pass = session.getRequest().getPass();
 
         //Checks so that user credentials are provided

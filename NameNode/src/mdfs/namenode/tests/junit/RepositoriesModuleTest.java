@@ -38,15 +38,15 @@ public class RepositoriesModuleTest {
 	public void testUserDataRepository() {
 		UserDataRepositoryNode node;
 		//Adding users
-		assertTrue(userDataRepository.addUser("moduelTest", "moduelTest"));
-		assertTrue(!userDataRepository.addUser("moduelTest", "moduelTest"));
+		assertTrue(userDataRepository.add("moduelTest", "moduelTest"));
+		assertTrue(!userDataRepository.add("moduelTest", "moduelTest"));
 		
 		//Getting user
-		assertTrue((node = userDataRepository.getUser("moduelTest")) != null);
-		assertTrue(userDataRepository.getUser("1234567890") == null);
+		assertTrue((node = userDataRepository.get("moduelTest")) != null);
+		assertTrue(userDataRepository.get("1234567890") == null);
 		
 		//Adding same user
-		assertTrue(!userDataRepository.addUser(node));
+		assertTrue(!userDataRepository.add(node));
 		
 		//Testing authentication
 		assertTrue(userDataRepository.authUser("moduelTest", "moduelTest"));
@@ -55,8 +55,8 @@ public class RepositoriesModuleTest {
 		assertTrue(!userDataRepository.authUser(node, "moduelTest1"));
 		
 		//Testing removing user
-		assertTrue(userDataRepository.removeUser("moduelTest") != null);
-		assertTrue(userDataRepository.removeUser("moduelTest") == null);
+		assertTrue(userDataRepository.remove("moduelTest") != null);
+		assertTrue(userDataRepository.remove("moduelTest") == null);
 	}
 	
 	@Test
@@ -118,7 +118,7 @@ public class RepositoriesModuleTest {
 			node.setSize(10);
 			nodes[i] = node;
 		}
-		assertTrue(metaDataRepository.add(nodes));
+		assertTrue(metaDataRepository.add(nodes, false));
 		
 		nodes = metaDataRepository.getChildren("/metaRepoTest/dir");
 		assertTrue(nodes.length == 10);

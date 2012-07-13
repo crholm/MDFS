@@ -62,7 +62,7 @@ public class DataNodeInfoRepository {
 		
 		//Updates the MySQL database with the valuse from the config.
 		for(DataNodeInfoRepositoryNode node : listByAddress.values()){
-			MySQLUpdater.getInstance().updateDataNode(node);
+			MySQLUpdater.getInstance().update(node);
 		}
 	}
 	

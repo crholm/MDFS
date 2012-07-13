@@ -33,13 +33,13 @@ public class MySQLUpdater_Test {
 		
 		MySQLUpdater sql = MySQLUpdater.getInstance();
 		
-		sql.updateMetaData(node2);
-		sql.updateMetaData(node);
+		sql.update(node2);
+		sql.update(node);
 
 		
 		UserDataRepositoryNode user = new UserDataRepositoryNode(82, "raz");
 		user.setPwdHash("dsfoiuh320y9ewsmfpu29fun+28uf+98mfu2ff,siu +943ufj");
-		sql.updateUserData(user);
+		sql.update(user);
 		
 		
 		

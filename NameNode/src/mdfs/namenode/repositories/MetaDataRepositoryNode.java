@@ -104,7 +104,7 @@ public class MetaDataRepositoryNode extends MDFSProtocolMetaData{
 		if(!location.contains(node)){
 			location.add(node);
 			if(updateSQL)
-				MySQLUpdater.getInstance().updateMetaDataDataNodeRelation(this, node);
+				MySQLUpdater.getInstance().updateRelation(this, node);
 		}
 	}
 	

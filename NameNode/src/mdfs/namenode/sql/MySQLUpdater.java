@@ -1,14 +1,18 @@
 package mdfs.namenode.sql;
 
 import mdfs.namenode.repositories.DataNodeInfoRepositoryNode;
+import mdfs.namenode.repositories.GroupDataRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
 import mdfs.utils.Config;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -142,12 +146,12 @@ public class MySQLUpdater implements Runnable{
 	
 	/**
 	 * Updates the node in permanent storage
-	 * @param node the MetaDataRepositoryNode that is to be updated in SQL
-	 */
-	public void updateMetaData(MetaDataRepositoryNode node){
+     * @param node the MetaDataRepositoryNode that is to be updated in SQL
+     */
+	public void update(MetaDataRepositoryNode node){
 		lock.lock();
 		try{
-			enqueue(createMetaDataRowSQLStatement(node));
+			enqueue(updateMetaData(node));
 		}finally{
 			lock.unlock();
 		}
@@ -155,12 +159,12 @@ public class MySQLUpdater implements Runnable{
 	
 	/**
 	 * Deletes a MetaDataRepositoryNode as stored in the MySQL database
-	 * @param filePath the logical MDFS path to the node that is to be deleted from the SQL
-	 */
-	public void deleteMetaData(String filePath){
+     * @param node
+     */
+	public void remove(MetaDataRepositoryNode node){
 		lock.lock();
 		try{
-			enqueue(createMetaDataDeleteRowStatement(filePath));
+			enqueue(removeMetaData(node.getFilePath()));
 		}finally{
 			lock.unlock();
 		}
@@ -170,18 +174,15 @@ public class MySQLUpdater implements Runnable{
 	 * Deletes a MetaDataRepositoryNode as stored in the MySQL database
 	 * @param node The node that is to be deleted from SQL
 	 */
-	public void deleteMetaData(MetaDataRepositoryNode node){
-		deleteMetaData(node.getFilePath());
-	}
-	
+
 	/**
 	 * Updates the node in permanent storage
-	 * @param node the node that is to be updated
-	 */
-	public void updateUserData(UserDataRepositoryNode node){
+     * @param node the node that is to be updated
+     */
+	public void update(UserDataRepositoryNode node){
 		lock.lock();
 		try{
-			enqueue(createUserDataRowSQLStatement(node));
+			enqueue(updateUserData(node));
 		}finally{
 			lock.unlock();
 		}
@@ -189,68 +190,162 @@ public class MySQLUpdater implements Runnable{
 	
 	/**
 	 * Removes node from permanent storage
-	 * @param node the node that is to be removed
-	 */
-	public void removeUserData(UserDataRepositoryNode node) {
+     * @param node the node that is to be removed
+     */
+	public void remove(UserDataRepositoryNode node) {
 		lock.lock();
 		try{
-			enqueue(createUserDataDeleteRowSQLStatement(node));
+			enqueue(removeUserData(node.getUid()));
 		}finally{
 			lock.unlock();
 		}
-		
-	//	DELETE FROM `mdfs`.`user-data` WHERE `user-data`.`name` = \'test2\'
-		
+
 	}
 	
 	
 	/**
 	 * Updates the node in permanent storage
-	 * @param node the node that is to be updated
-	 */
-	public void updateDataNode(DataNodeInfoRepositoryNode node) {
+     * @param node the node that is to be updated
+     */
+	public void update(DataNodeInfoRepositoryNode node) {
 		lock.lock();
 		try{
-			enqueue(createDataNodeRowSQLStatement(node));
+			enqueue(updateDataNode(node));
 		}finally{
 			lock.unlock();
 		}
 		
 	}
-	
-	/**
+
+
+    public void update(GroupDataRepositoryNode node){
+        lock.lock();
+        try{
+            enqueue(updateGroup(node));
+        }finally{
+            lock.unlock();
+        }
+    }
+    public void remove(GroupDataRepositoryNode node){
+        lock.lock();
+        try{
+            enqueue(removeGroup(node.getGid()));
+        }finally{
+            lock.unlock();
+        }
+    }
+
+
+    public void updateRelation(){
+
+    }
+
+
+    /**
 	 * Updates the relation between a MetaDataRepositoryNode DataNodeInfoRepositoryNode in permanent storage
-	 * @param metaData The MetaDataRepositoryNode that has relation to DataNodeInfoRepositoryNode 
-	 * @param dataNode The DataNodeInfoRepositoryNode that has relation to MetaDataRepositoryNode 
-	 */
-	public void updateMetaDataDataNodeRelation( MetaDataRepositoryNode metaData, DataNodeInfoRepositoryNode dataNode) {
+     * @param metadata The MetaDataRepositoryNode that has relation to DataNodeInfoRepositoryNode
+     * @param datanode The DataNodeInfoRepositoryNode that has relation to MetaDataRepositoryNode
+     */
+	public void updateRelation(MetaDataRepositoryNode metadata, DataNodeInfoRepositoryNode datanode) {
 		lock.lock();
 		try{
-			enqueue(createMetaDataDataNodeRelation(metaData, dataNode));
+			enqueue(updateRelation_MetaNodeDataNode(metadata, datanode));
 		}finally{
 			lock.unlock();
 		}
 	}
-	
+    public void updateRelation(GroupDataRepositoryNode group, UserDataRepositoryNode user) {
+        lock.lock();
+        try{
+            enqueue(updateRelation_GroupUser(group.getGid(), user.getUid()));
+        }finally{
+            lock.unlock();
+        }
+    }
+    public void removeRelation(MetaDataRepositoryNode metadata, DataNodeInfoRepositoryNode datanode) {
+        lock.lock();
+        try{
+            enqueue(removeRelation_MetaNodeDataNode(metadata, datanode));
+        }finally{
+            lock.unlock();
+        }
+    }
 
-	/*
+
+    public void removeRelation(GroupDataRepositoryNode group, UserDataRepositoryNode user){
+        lock.lock();
+        try{
+            enqueue(removeRelation_GroupUser(group.getGid(), user.getUid()));
+        }finally{
+            lock.unlock();
+        }
+    }
+
+
+
+    private String removeGroup(int gid) {
+        return "DELETE FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "group-data` " +
+                "WHERE `group-data`.`gid` = " + gid + ";";
+    }
+
+    private String updateGroup(GroupDataRepositoryNode node) {
+        return "INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "group-data` (" +
+                "`gid`, " +
+                "`name`" +
+                ") " +
+                "VALUES (" +
+                "'" + node.getGid() + "', " +
+                "'" + escape(node.getName())  +"'" +
+                ")" +
+                "ON DUPLICATE KEY UPDATE" +
+				"`gid` = '" + node.getGid() + "', " +
+				"`name` = '" + escape(node.getName()) + "' " +
+                ";";
+    }
+
+    private String updateRelation_GroupUser(int gid, int uid) {
+        return "INSERT IGNORE INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data_group-data` (" +
+                "`uid`, " +
+                "`gid`) " +
+                "VALUES (" +
+                "'" + uid + "', " +
+                "'" + gid + "'" +
+                ");";
+    }
+    private String removeRelation_GroupUser(int gid, int uid) {
+        return "DELETE FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data_group-data` " +
+                "WHERE " +
+                "`user-data_group-data`.`uid` = " + uid + " " +
+                "AND " +
+                "`user-data_group-data`.`gid` = " + gid +  ";";
+    }
+
+
+    /*
 	 * Creates SQL statement executing update
 	 */
-	private String createMetaDataDataNodeRelation(MetaDataRepositoryNode metaData, DataNodeInfoRepositoryNode dataNode) {
+	private String updateRelation_MetaNodeDataNode(MetaDataRepositoryNode metaData, DataNodeInfoRepositoryNode dataNode) {
 		
-		return  "INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "meta-data_data-node` " +
+		return  "INSERT IGNORE INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "meta-data_data-node` " +
 				"(`Meta_Data_filePath`, " +
 				"`Data_Node_Name`) " +
 				"VALUES (" +
-				"'" + metaData.getFilePath()  +  "', " +
-				"'" + dataNode.getName() + "'" +
+				"'" + escape(metaData.getFilePath())  +  "', " +
+				"'" + escape(dataNode.getName()) + "'" +
 				");";
 	}
+    private String removeRelation_MetaNodeDataNode(MetaDataRepositoryNode metadata, DataNodeInfoRepositoryNode datanode) {
+        return "DELETE FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "meta-data_data-node` " +
+                "WHERE " +
+                "`meta-data_data-node`.`Meta_Data_filePath` = " + escape(metadata.getFilePath()) + " " +
+                "AND " +
+                "`meta-data_data-node`.`Data_Node_Name` = " + escape(datanode.getName()) +  ";";
+    }
 	
 	/*
 	 * Creates SQL statement executing update
 	 */
-	private String createDataNodeRowSQLStatement(DataNodeInfoRepositoryNode node) {
+	private String updateDataNode(DataNodeInfoRepositoryNode node) {
 		
 		return "INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "data-node` (" +
 				"`name`, " +
@@ -258,51 +353,51 @@ public class MySQLUpdater implements Runnable{
 				"`port`" +
 				") " +
 				"VALUES (" +
-				"'" + node.getName()  + "', " +
-				"'" + node.getAddress() + "', " +
-				"'" + node.getPort() + "'" +
+				"'" + escape(node.getName())  + "', " +
+				"'" + escape(node.getAddress()) + "', " +
+				"'" + escape(node.getPort()) + "'" +
 				")" +
 				"ON DUPLICATE KEY UPDATE" +
-				"`name` = '" + node.getName() + "', " +
-				"`address` = '" + node.getAddress() + "', " +
-				"`port` = '" + node.getPort() + "' " +
+				"`name` = '" + escape(node.getName()) + "', " +
+				"`address` = '" + escape(node.getAddress()) + "', " +
+				"`port` = '" + escape(node.getPort()) + "' " +
 				";";
 	}
 	
 	/*
 	 * Creates SQL statement executing delete
 	 */
-	private String createMetaDataDeleteRowStatement(String filePath){
+	private String removeMetaData(String filePath){
 		return 	"DELETE FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "meta-data` " +
-				"WHERE `meta-data`.`filePath` = '" +  filePath  + "';" ;
+				"WHERE `meta-data`.`filePath` = '" +  escape(filePath)  + "';" ;
 	}
 	
 	/*
 	 * Creates SQL statement executing update
 	 */
-	private String createUserDataRowSQLStatement(UserDataRepositoryNode node){
+	private String updateUserData(UserDataRepositoryNode node){
 		return "INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data` (" +
                 "`uid`, " +
                 "`name`, " +
 				"`pwdHash`" +
 				") " +
 				"VALUES (" +
-				"'" + node.getUid() + "', '" + node.getName() + "', '" + node.getPwdHash() + "')" +
+				"'" + node.getUid() + "', '" + escape(node.getName()) + "', '" + escape(node.getPwdHash()) + "')" +
 				"ON DUPLICATE KEY UPDATE" +
                 "`uid` = '" + node.getUid() + "', " +
-                "`name` = '" + node.getName() + "', " +
-				"`pwdHash` = '"+ node.getPwdHash() + "'" +
+                "`name` = '" + escape(node.getName()) + "', " +
+				"`pwdHash` = '"+ escape(node.getPwdHash()) + "'" +
 				";";
 	}
-	private String createUserDataDeleteRowSQLStatement(UserDataRepositoryNode node){
+	private String removeUserData(int uid){
 		return "DELETE FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data` " +
-				"WHERE `user-data`.`name` = '" + node.getName() + "';";
+				"WHERE `user-data`.`uid` = " + uid + ";";
 	}
 	
 	/*
 	 * Creates SQL statement executing update
 	 */
-	private String createMetaDataRowSQLStatement(MetaDataRepositoryNode node){
+	private String updateMetaData(MetaDataRepositoryNode node){
 		return 	"INSERT INTO `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "meta-data` (" + 
 						 "`filePath`, " +
 						 "`size`, " +
@@ -312,32 +407,97 @@ public class MySQLUpdater implements Runnable{
 						 "`uid`, " +
 						 "`gid`, " +
 						 "`created`, " +
-						 "`lastEdited` ) " +
+						 "`lastEdited`," +
+                         "`lastTouched` ) " +
 				 "values (" +
-				 			"'" + node.getFilePath() + "', " +
+				 			"'" + escape(node.getFilePath()) + "', " +
 				 			"'" + node.getSize() + "', " +
 				 			"'" + node.getFileType() + "', " +
-				   		    "'" + node.getStorageName() + "', " +
+				   		    "'" + escape(node.getStorageName()) + "', " +
 				   		    "'" + node.getPermission() + "', " +
 				   		    "'" + node.getUid() + "', " +
 				   		    "'" + node.getGid() + "', " +
 				   		    "'" + node.getCreated() + "', " +
-				   		    "'" + node.getLastEdited() + "'" +
+				   		    "'" + node.getLastEdited() + "', " +
+                            "'" + node.getLastTouched() + "'" +
 				   		")" +
 		 		
 				 "ON DUPLICATE KEY UPDATE " +   
 		 				"`size` = '" + node.getSize() + "', " +
 		 				"`fileType` = '" + node.getFileType() + "', " +
-		 				"`storageName` = '" + node.getStorageName() + "', " +
+		 				"`storageName` = '" + escape(node.getStorageName()) + "', " +
 		 				"`permission` = '" + node.getPermission() + "', " +
 		 				"`uid` = '" + node.getUid() + "', " +
 		 				"`gid` = '" + node.getGid() + "', " +
 		 				"`created` = '" + node.getCreated() + "', " +
 		 				"`lastEdited` = '" + node.getLastEdited() + "' " +
-		 				//"`lastTouched` = '" + node.getLastTouched() + "' " +
+		 				"`lastTouched` = '" + node.getLastTouched() + "' " +
 		 		";";
 	}
 	
 
+
+
+    private String escape2(String s){
+
+        s = s.replace("\\", "\\\\");
+        s = s.replace((char)0x00+"", "\\0");
+        s = s.replace("'", "\\'");
+        s = s.replace("\"", "\\\"");
+        s = s.replace("\n", "\\n");
+        s = s.replace("\b", "\\b");
+        s = s.replace("\r", "\\r");
+        s = s.replace("\t", "\\t");
+        s = s.replace((char)26+"", "\\Z");
+        s = s.replace("%", "\\%");
+        s = s.replace("_", "\\_");
+
+        return s;
+    }
+
+
+    //Warning: wrong if NO_BACKSLASH_ESCAPES SQL mode is enabled
+    private static final HashMap<String,String> sqlTokens;
+    private static Pattern sqlTokenPattern;
+
+    static
+    {
+        //MySQL escape sequences: http://dev.mysql.com/doc/refman/5.1/en/string-syntax.html
+        String[][] search_regex_replacement = new String[][]
+                {
+                        //search string     search regex        sql replacement regex
+                        {   "\u0000"    ,       "\\x00"     ,       "\\\\0"     },
+                        {   "'"         ,       "'"         ,       "\\\\'"     },
+                        {   "\""        ,       "\""        ,       "\\\\\""    },
+                        {   "\b"        ,       "\\x08"     ,       "\\\\b"     },
+                        {   "\n"        ,       "\\n"       ,       "\\\\n"     },
+                        {   "\r"        ,       "\\r"       ,       "\\\\r"     },
+                        {   "\t"        ,       "\\t"       ,       "\\\\t"     },
+                        {   "\u001A"    ,       "\\x1A"     ,       "\\\\Z"     },
+                        {   "\\"        ,       "\\\\"      ,       "\\\\\\\\"  }
+                };
+
+        sqlTokens = new HashMap<String,String>();
+        String patternStr = "";
+        for (String[] srr : search_regex_replacement)
+        {
+            sqlTokens.put(srr[0], srr[2]);
+            patternStr += (patternStr.isEmpty() ? "" : "|") + srr[1];
+        }
+        sqlTokenPattern = Pattern.compile('(' + patternStr + ')');
+    }
+
+
+    private static String escape(String s)
+    {
+        Matcher matcher = sqlTokenPattern.matcher(s);
+        StringBuffer sb = new StringBuffer();
+        while(matcher.find())
+        {
+            matcher.appendReplacement(sb, sqlTokens.get(matcher.group(1)));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
 
 }

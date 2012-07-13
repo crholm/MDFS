@@ -20,9 +20,9 @@ import java.net.ServerSocket;
 public class NameNode_Test {
 	public static void main(String[] args){
 		System.out.println("Loading user Reopsitory...");
-		UserDataRepository.getInstance().addUser("raz", "qwerty");
-		UserDataRepository.getInstance().addUser("test1", "test1");
-		UserDataRepository.getInstance().addUser("test2", "test2");
+		UserDataRepository.getInstance().add("raz", "qwerty");
+		UserDataRepository.getInstance().add("test1", "test1");
+		UserDataRepository.getInstance().add("test2", "test2");
 		System.out.println("Loading DataNode Repository...");
 		DataNodeInfoRepository.getInstance();
 		System.out.println("Loading MetaData Repository...");

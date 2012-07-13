@@ -101,7 +101,7 @@ public class ParserInfoFile implements Parser {
 
         if(info.getLength() != -1){
             node.setSize(info.getLength());
-            MySQLUpdater.getInstance().updateMetaData(node);
+            MySQLUpdater.getInstance().update(node);
         }
 
         return true;
