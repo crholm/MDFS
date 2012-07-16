@@ -42,7 +42,8 @@ public class FileNameOperations {
         String dirs[] = path.split("/");
         path = "";
         for(int i = 0; i < dirs.length-1; i++){
-            path += "/" + dirs[i];
+            if(dirs[i].length() > 0)
+                path += "/" + dirs[i];
         }
         return path;
     }

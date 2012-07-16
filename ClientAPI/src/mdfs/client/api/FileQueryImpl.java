@@ -157,7 +157,7 @@ public class FileQueryImpl implements FileQuery{
 
         //If the response contains an Error the ls operation failed and null is returned
         if(response.getError() != null){
-
+                System.err.print(request.getMetadata().getPath() + ", " + response.getError());
                 errorMessage = response.getError();
 
             return null;
@@ -283,6 +283,7 @@ public class FileQueryImpl implements FileQuery{
         //Checks if there is an error in the removal of the file
         if(response.getError() != null){
             errorMessage = response.getError();
+            System.err.print(request.getMetadata().getPath() + ", " + response.getError());
             return false;
         }
 
@@ -352,7 +353,7 @@ public class FileQueryImpl implements FileQuery{
 				//Exites and returns false if it contains an error
 				if(response.getError() != null){
 					errorMessage = response.getError();
-                    System.out.println(response.getError());
+                    System.err.print(request.getMetadata().getPath() + ", " + response.getError());
 					return false;
 				}
 					
@@ -429,9 +430,6 @@ public class FileQueryImpl implements FileQuery{
             metadata.setPath(targetPath);
             metadata.setType(MetadataType.FILE);
             metadata.setSize(sourceFile.length());
-            metadata.setPermission(640);
-            metadata.setOwner(user);
-            metadata.setGroup(user);
             metadata.setCreated(sourceFile.lastModified());
             metadata.setLastEdited(sourceFile.lastModified());
             metadata.setLastTouched(Time.currentTimeMillis());
@@ -473,6 +471,7 @@ public class FileQueryImpl implements FileQuery{
             //Returns false if there was a error from the name node
             if(response.getError() != null){
                 errorMessage = response.getError();
+                System.err.print(request.getMetadata().getPath() + ", " + response.getError());
                 return false;
 
             //If file already exists, it connects to DataNode for overwriting
@@ -515,16 +514,20 @@ public class FileQueryImpl implements FileQuery{
 			//Receives response from data node
             try {
                 MDFSProtocolHeader response2 = new MDFSProtocolHeader(socketFunctions.receiveText(dataNodeSocket));
+                dataNodeSocket.close();
+                if(request2.getError() != null){
+                    errorMessage = request2.getError();
+                    System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+                    return false;
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
                 return false;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            try {
-				dataNodeSocket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+
 			return true;
 		}			
 		
@@ -588,9 +591,9 @@ public class FileQueryImpl implements FileQuery{
         metadata.setPath(targetPath);
         metadata.setType(MetadataType.DIR);
         metadata.setSize(0);
-        metadata.setPermission(640);
-        metadata.setOwner(user);
-        metadata.setGroup(user);
+        //metadata.setPermission(640);
+        //metadata.setOwner(user);
+        //metadata.setGroup(user);
 
         long timestamp = Time.currentTimeMillis();
         metadata.setCreated(timestamp);
@@ -621,6 +624,7 @@ public class FileQueryImpl implements FileQuery{
 
         if(response.getError() != null){
             errorMessage = getError();
+            System.err.print(request.getMetadata().getPath() + ", " + response.getError());
             return false;
         }else{
             return true;

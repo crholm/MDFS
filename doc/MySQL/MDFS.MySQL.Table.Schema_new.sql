@@ -2,13 +2,12 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-DROP  TABLE IF EXISTS `user-data_group-data`, `meta-data_data-node`;
-DROP  TABLE IF EXISTS `user-data`, `data-node`, `meta-data`;
+DROP TABLE IF EXISTS `user-data_group-data`, `meta-data_data-node`, `user-data`, `data-node`, `meta-data`, `group-data`;
 
 -- Table structure for table `data-node`
 --
 
-CREATE TABLE IF NOT EXISTS `data-node` (
+CREATE TABLE `data-node` (
   `name` varchar(256) NOT NULL,
   `address` varchar(256) NOT NULL,
   `port` int(11) NOT NULL,
@@ -23,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `data-node` (
 -- Table structure for table `group-data`
 --
 
-CREATE TABLE IF NOT EXISTS `group-data` (
+CREATE TABLE `group-data` (
   `gid` int(11) NOT NULL,
   `name` varchar(256) NOT NULL,
   PRIMARY KEY (`gid`),
@@ -37,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `group-data` (
 -- Table structure for table `meta-data`
 --
 
-CREATE TABLE IF NOT EXISTS `meta-data` (
+CREATE TABLE `meta-data` (
   `filePath` varchar(256) NOT NULL,
   `size` bigint(20) DEFAULT NULL,
   `fileType` varchar(128) DEFAULT NULL,
@@ -45,9 +44,9 @@ CREATE TABLE IF NOT EXISTS `meta-data` (
   `permission` int(11) DEFAULT NULL,
   `uid` int(11) DEFAULT NULL,
   `gid` int(11) DEFAULT NULL,
-  `created` int(11) DEFAULT NULL,
-  `lastEdited` int(11) DEFAULT NULL,
-  `lastTouched` int(11) DEFAULT NULL,
+  `created` bigint(64) DEFAULT NULL,
+  `lastEdited` bigint(64) DEFAULT NULL,
+  `lastTouched` bigint(64) DEFAULT NULL,
   PRIMARY KEY (`filePath`)
  
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -58,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `meta-data` (
 -- Table structure for table `meta-data_data-node`
 --
 
-CREATE TABLE IF NOT EXISTS `meta-data_data-node` (
+CREATE TABLE `meta-data_data-node` (
   `Meta_Data_filePath` varchar(256) NOT NULL,
   `Data_Node_Name` varchar(256) NOT NULL,
   PRIMARY KEY (`Meta_Data_filePath`,`Data_Node_Name`),
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `meta-data_data-node` (
 -- Table structure for table `user-data`
 --
 
-CREATE TABLE IF NOT EXISTS `user-data` (
+CREATE TABLE `user-data` (
   `uid` int(11) NOT NULL,
   `name` varchar(256) NOT NULL,
   `pwdHash` varchar(256) DEFAULT NULL,
@@ -81,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `user-data` (
 
 
 
-CREATE TABLE IF NOT EXISTS `user-data_group-data` (
+CREATE TABLE `user-data_group-data` (
   `uid` int(11) NOT NULL,
   `gid` int(11) NOT NULL,
   PRIMARY KEY (`uid`,`gid`),

@@ -87,8 +87,8 @@ public class MDFSIntegrationTest {
 	@Test
 	public void testRm() {
 		FileQuery fq = new FileQueryImpl("test1", "test1");
-		assertTrue(fq.mkdir("rm"));
-		assertTrue(fq.mkdir("/test1/rm1"));
+		//assertTrue(fq.mkdir("rm"));
+		//assertTrue(fq.mkdir("/test1/rm1"));
 		assertTrue(fq.mkdir("/test1/rm1/1"));
 		assertTrue(fq.mkdir("/test1/rm1/2"));
 		assertTrue(fq.mkdir("/test1/rm1/3"));

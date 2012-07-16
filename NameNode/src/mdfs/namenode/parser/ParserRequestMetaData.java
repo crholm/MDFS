@@ -306,7 +306,7 @@ public class ParserRequestMetaData implements Parser {
 
             if(parent == null){
                 //This happens if one is trying to add a file or dir of which the parent dirs dose not exist
-                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "File could not be added to the FS, No such file or directory"));
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "File could not be added to the FS, no parent directory exists"));
                 return false;
             }
 

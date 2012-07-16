@@ -24,9 +24,9 @@ public class ACL {
         if(permission < 0)
             permission *= -1;
 
-        int u = permission/ 100;
-        int a = permission % 10;
-        int g = (permission % 100 - a) / 10 ;
+        int u = (permission/100) %8;
+        int a = (permission %10) %8;
+        int g = ((permission % 100 - a) / 10) %8 ;
 
 
 
@@ -54,33 +54,33 @@ public class ACL {
 
             case WRITE:
 
-                if(isOwner && (u >> 1)%2 == 1)
+                if(isOwner && (u & 2) == 2)
                     return true;
 
-                if((a >> 1)%2 == 1)
+                if((a & 2) == 2)
                     return true;
 
                 if(user != null)
                     break;
 
                 inGroup = GroupDataRepository.getInstance().get(file.getGid()).containsUser(user);
-                if(inGroup && (g >> 1)%2 == 1)
+                if(inGroup && (g & 2) == 2)
                     return true;
 
                 break;
 
             case EXECUTE:
-                if(isOwner && (u%4%2) == 1)
+                if(isOwner && (u & 1) == 1)
                     return true;
 
-                if((a%4%2) == 1)
+                if((a & 1) == 1)
                     return true;
 
                 if(user != null)
                     break;
 
                 inGroup = GroupDataRepository.getInstance().get(file.getGid()).containsUser(user);
-                if(inGroup && (g%4%2) == 1)
+                if(inGroup && (g & 1) == 1)
                     return true;
 
                 break;

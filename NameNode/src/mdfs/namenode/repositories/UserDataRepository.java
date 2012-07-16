@@ -91,7 +91,7 @@ public class UserDataRepository {
 
 				homeDir.setOwner(node.getName());
 				homeDir.setGroup(node.getName());
-                homeDir.setPermission(755);
+                homeDir.setPermission(775);
                 homeDir.setUid(node.getUid());
                 homeDir.setGid(node.getUid());
 

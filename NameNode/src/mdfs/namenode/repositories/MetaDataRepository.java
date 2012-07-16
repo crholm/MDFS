@@ -58,7 +58,8 @@ public class MetaDataRepository {
     public MetaDataRepositoryNode getParent(String key) {
         lock.lock();
         try{
-            MetaDataRepositoryNode node = get(new FileNameOperations().parentPath(key));
+            String parent = new FileNameOperations().parentPath(key);
+            MetaDataRepositoryNode node = get(parent);
             return node;
         }finally {
             lock.unlock();
