@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS `data-node` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `group-date`
+-- Table structure for table `group-data`
 --
 
-CREATE TABLE IF NOT EXISTS `group-date` (
+CREATE TABLE IF NOT EXISTS `group-data` (
   `gid` int(11) NOT NULL,
   `name` varchar(256) NOT NULL,
   PRIMARY KEY (`gid`),

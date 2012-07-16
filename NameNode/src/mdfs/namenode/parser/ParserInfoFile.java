@@ -91,10 +91,10 @@ public class ParserInfoFile implements Parser {
 
 
         /*
-         * TODO: maby make sure that the correct DataNodes are informed of overwrite.
+         *
          * 		 this is handle by the datanode themself at the moment.
          */
-
+        //TODO: maby make sure that the correct DataNodes are informed of overwrite.
         //Adds the new location of the raw data to the MetaDataRepositoryNode
         if(!overwrite)
             node.addLocation(dataNode);

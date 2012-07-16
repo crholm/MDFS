@@ -1,5 +1,6 @@
 package mdfs.namenode.sql;
 
+import mdfs.namenode.repositories.GroupDataRepositoryNode;
 import mdfs.namenode.repositories.MetaDataRepositoryNode;
 import mdfs.namenode.repositories.UserDataRepositoryNode;
 import mdfs.utils.Config;
@@ -43,6 +44,20 @@ public class MySQLFetch {
 	public ResultSet getResultSet(){
 		return rs;
 	}
+
+    /**
+     * Cloases and cleans up the connection, resultset and so on.
+     */
+    public void close(){
+        try {
+            stmt.close();
+            rs.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
 	
 	/**
 	 * 
@@ -68,15 +83,93 @@ public class MySQLFetch {
 		return 0;
 		
 	}
-	
+    public int max(String table, String column){
+        String query = "SELECT MAX(" + column + ") FROM `" + Config.getString("MySQL.db") + "`.`"
+                + Config.getString("MySQL.prefix") + table +  "`;";
+
+        createResultSet(query);
+
+        try {
+            getResultSet().next();
+            int count = getResultSet().getInt("MAX(" + column + ")");
+            close();
+            return count;
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+        close();
+        return 0;
+
+    }
+
+    public GroupDataRepositoryNode[] getGroupDataRepositoryNodes(int offset, int length){
+        String query =  "SELECT * FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "group-data` " +
+                "ORDER BY `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "group-data`.`gid` ASC " +
+                "LIMIT "+ offset +" , " + length + ";";
+
+        //Creates the resultset and fetches it
+        createResultSet(query);
+        ResultSet result = getResultSet();
+        GroupDataRepositoryNode node;
+        GroupDataRepositoryNode nodes[] = null;
+
+
+        try {
+            LinkedList<GroupDataRepositoryNode> list = new LinkedList<GroupDataRepositoryNode>();
+
+            while(result.next()){
+                node = new GroupDataRepositoryNode(result.getInt("gid"), result.getString("name"));
+                list.add(node);
+
+            }
+
+            nodes = new GroupDataRepositoryNode[list.size()];
+            nodes = list.toArray(nodes);
+        } catch (SQLException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        close();
+        return nodes;
+    }
+
+    public int[][] getUserGroupRelation(int offset, int length){
+        String query =  "SELECT * FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data_group-data` " +
+                "ORDER BY `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data_group-data`.`gid` ASC " +
+                "LIMIT "+ offset +" , " + length + ";";
+
+        createResultSet(query);
+        ResultSet result = getResultSet();
+
+        int r[][] = new int[length][2];
+
+        try {
+            int i = 0;
+            while (result.next()){
+                r[i][0] = result.getInt("gid");
+                r[i][1] = result.getInt("uid");
+                i++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        close();
+        return r;
+
+    }
+
+
 	/**
 	 * Fetches all the UserDataRepositoryNodes that are stored in the database and parses them in to such
 	 * @return an array of all the UserDataRepositort stored in SQL
 	 */
-	public UserDataRepositoryNode[] getUserDataRepositoryNodes(){
+	public UserDataRepositoryNode[] getUserDataRepositoryNodes(int offset, int length){
 		//Creates the query for the operation
 		String query =  "SELECT * FROM `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data` " +
-						"ORDER BY `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data`.`name` ASC;";
+						"ORDER BY `" + Config.getString("MySQL.db") + "`.`" + Config.getString("MySQL.prefix") + "user-data`.`name` ASC " +
+                        "LIMIT "+ offset +" , " + length  + ";";
 		
 		//Creates the resultset and fetches it
 		createResultSet(query);
@@ -106,19 +199,7 @@ public class MySQLFetch {
 	}
 	
 	
-	/**
-	 * Cloases and cleans up the connection, resultset and so on.
-	 */
-	public void close(){
-		try {
-			stmt.close();
-			rs.close();
-			conn.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-	}
+
 
 	/**
 	 * Fetches all the MetaDataRepositoryNode that are stored in the database and parses them in to such within the

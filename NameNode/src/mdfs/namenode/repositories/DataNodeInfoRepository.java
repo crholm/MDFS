@@ -25,7 +25,18 @@ public class DataNodeInfoRepository {
 
 	//listByName, the key is the name of the data node which should be uniq
 	private ConcurrentSkipListMap<String, DataNodeInfoRepositoryNode> listByName = new ConcurrentSkipListMap<String, DataNodeInfoRepositoryNode>();
-	
+
+    /**
+     * Used to gain access to the shared repository
+     * @return the instance of the DataNodeInfoRepository
+     */
+    public static DataNodeInfoRepository getInstance(){
+        if(instance == null){
+            instance = new DataNodeInfoRepository();
+        }
+        return instance;
+    }
+
 	private DataNodeInfoRepository(){
 		lock.lock();
 		try{
@@ -66,16 +77,7 @@ public class DataNodeInfoRepository {
 		}
 	}
 	
-	/**
-	 * Used to gain access to the shared repository
-	 * @return the instance of the DataNodeInfoRepository
-	 */
-	public static DataNodeInfoRepository getInstance(){
-		if(instance == null){
-			instance = new DataNodeInfoRepository();
-		}
-		return instance;
-	}
+
 	
 	/**
 	 * Returns the DataNodeInfo that relates to the dns address that is given.

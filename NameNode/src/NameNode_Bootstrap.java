@@ -1,12 +1,11 @@
 import mdfs.namenode.io.ConnectionListener;
 import mdfs.namenode.repositories.DataNodeInfoRepository;
+import mdfs.namenode.repositories.GroupDataRepository;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
 import mdfs.utils.io.EServerSocket;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -19,6 +18,8 @@ public class NameNode_Bootstrap {
 	public static void main(String[] args){
 		System.out.println("Loading user Reopsitory...");
 		UserDataRepository.getInstance();
+        System.out.println("Loading group Reopsitory...");
+        GroupDataRepository.getInstance();
 		System.out.println("Loading DataNode Repository.. .");
 		DataNodeInfoRepository.getInstance();
 		System.out.println("Loading MetaData Repository...");

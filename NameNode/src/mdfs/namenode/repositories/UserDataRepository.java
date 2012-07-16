@@ -250,19 +250,7 @@ public class UserDataRepository {
 		return result;
 	}
 	
-	/**
-	 * Loads user data repository from permanent storage
-	 */
-	public void load(){
-        //TODO load user counter.
-		MySQLFetch sql = new MySQLFetch();
-		UserDataRepositoryNode[] nodes = sql.getUserDataRepositoryNodes();
-		for (UserDataRepositoryNode node : nodes) {
-			repository.put(node.getName(), node);
-            repositoryUid.put(node.getUid(), node);
-		}
-		
-	}
+
 	/**
 	 * Saves the repository to permanent storage
 	 */
@@ -291,6 +279,47 @@ public class UserDataRepository {
         }finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Loads user data repository from permanent storage
+     */
+    public void load(){
+        lock.lock();
+        try{
+
+
+            MySQLFetch sql = new MySQLFetch();
+
+            int partition = 512;
+            int size = sql.countRows("user-data");
+
+            //Loaing userdata
+            UserDataRepositoryNode[] users;
+            for(int i = 0; i < size/partition+1; i++){
+
+                if(i < size/partition)
+                    users = sql.getUserDataRepositoryNodes(i*partition, partition);
+                else
+                    users = sql.getUserDataRepositoryNodes(((int)(size/partition)) * partition, size%partition);
+
+                for (UserDataRepositoryNode user : users) {
+                    repository.put(user.getName(), user);
+                    repositoryUid.put(user.getUid(), user);
+                }
+            }
+
+            //Loading user uid counter
+            int count = sql.max("user-data", "uid");
+            if(count > uidCounter)
+                uidCounter = count;
+
+
+
+        }finally {
+            lock.unlock();
+        }
+
     }
 }
 

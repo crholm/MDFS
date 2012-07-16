@@ -46,6 +46,18 @@ public class GroupDataRepositoryNode {
             lock.unlock();
         }
     }
+    void loadUser(UserDataRepositoryNode node){
+        lock.lock();
+        try{
+            if(users.contains(node))
+                return;
+            users.add(node);
+            node.addedToGroup(this);
+        }finally {
+            lock.unlock();
+        }
+
+    }
 
     public boolean removeUser(UserDataRepositoryNode node){
         lock.lock();

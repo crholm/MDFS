@@ -271,7 +271,7 @@ public class MetaDataRepository {
 			deafualtNode.setGroup("root");
 			deafualtNode.setFileType(MetadataType.DIR);
 			deafualtNode.setFilePath("/");
-			deafualtNode.setPermission((short)775);
+			deafualtNode.setPermission((short)000);
 			deafualtNode.setSize(0);
 			repository = new FSTree<MetaDataRepositoryNode>("/", "/", deafualtNode);
 		}finally{
