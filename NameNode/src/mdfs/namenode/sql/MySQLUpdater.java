@@ -430,7 +430,7 @@ public class MySQLUpdater implements Runnable{
 		 				"`uid` = '" + node.getUid() + "', " +
 		 				"`gid` = '" + node.getGid() + "', " +
 		 				"`created` = '" + node.getCreated() + "', " +
-		 				"`lastEdited` = '" + node.getLastEdited() + "' " +
+		 				"`lastEdited` = '" + node.getLastEdited() + "', " +
 		 				"`lastTouched` = '" + node.getLastTouched() + "' " +
 		 		";";
 	}

@@ -117,8 +117,33 @@ public class MetaDataRepositoryNode extends MDFSProtocolMetaData{
 		return location.toArray(nodes);
 	}
 	
+    @Override
+	public int getUid(){
+        if(super.getUid() != -1)
+            return super.getUid();
 
-	
+        if(getOwner() == null)
+            return -1;
+
+        setUid(UserDataRepository.getInstance().getUid(getOwner()));
+
+        return getUid();
+
+    }
+
+    @Override
+    public int getGid(){
+        if(super.getGid() != -1)
+            return super.getGid();
+
+        if(getGroup() == null)
+            return -1;
+
+        setGid(GroupDataRepository.getInstance().getGid(getGroup()));
+
+        return getGid();
+    }
+
 
 	
 	/**

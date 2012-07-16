@@ -70,13 +70,15 @@ public class UserDataRepository {
 				repository.put(node.getName(), node);
                 repositoryUid.put(node.getUid(), node);
 
+                //Writes the new user to permanent storage
+                MySQLUpdater.getInstance().update(node);
+
                 //Creating home group and adding user to it.
                 GroupDataRepositoryNode group = GroupDataRepository.getInstance().add(node.getUid(), node.getName());
-                System.out.println("g: " + group.getName());
-                System.out.println("u: " + node.getName());
-
+                //TODO fix if group is null;
                 group.addUser(node);
-				
+
+
 				//Creates the home dir for the new user
 				MetaDataRepositoryNode homeDir = new MetaDataRepositoryNode();
 				homeDir.setFilePath("/" + node.getName());
@@ -89,14 +91,14 @@ public class UserDataRepository {
 
 				homeDir.setOwner(node.getName());
 				homeDir.setGroup(node.getName());
+                homeDir.setPermission(755);
+                homeDir.setUid(node.getUid());
+                homeDir.setGid(node.getUid());
 
 
 				
 				//Adds the new dir to the repo
 				MetaDataRepository.getInstance().add(homeDir.getKey(), homeDir);
-				
-				//Writes the new user to permanent storage
-				MySQLUpdater.getInstance().update(node);
 
 				result = true;
 			}

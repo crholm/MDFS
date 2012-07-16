@@ -27,6 +27,7 @@ public class MySQLDeleteInsertUpdate{
 			s.executeUpdate(query);
 			s.close();
 		} catch (SQLException e) {
+            System.err.println("Failing query: " + query);
 			e.printStackTrace();
 		}
 			 
