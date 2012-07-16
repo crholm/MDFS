@@ -72,6 +72,9 @@ public class UserDataRepository {
 
                 //Creating home group and adding user to it.
                 GroupDataRepositoryNode group = GroupDataRepository.getInstance().add(node.getUid(), node.getName());
+                System.out.println("g: " + group.getName());
+                System.out.println("u: " + node.getName());
+
                 group.addUser(node);
 				
 				//Creates the home dir for the new user

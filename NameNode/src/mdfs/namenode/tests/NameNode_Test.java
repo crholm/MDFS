@@ -2,12 +2,12 @@ package mdfs.namenode.tests;
 
 import mdfs.namenode.io.ConnectionListener;
 import mdfs.namenode.repositories.DataNodeInfoRepository;
+import mdfs.namenode.repositories.GroupDataRepository;
 import mdfs.namenode.repositories.MetaDataRepository;
 import mdfs.namenode.repositories.UserDataRepository;
 import mdfs.utils.Config;
+import mdfs.utils.io.EServerSocket;
 
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -19,33 +19,37 @@ import java.net.ServerSocket;
  */
 public class NameNode_Test {
 	public static void main(String[] args){
-		System.out.println("Loading user Reopsitory...");
-		UserDataRepository.getInstance().add("raz", "qwerty");
-		UserDataRepository.getInstance().add("test1", "test1");
-		UserDataRepository.getInstance().add("test2", "test2");
-		System.out.println("Loading DataNode Repository...");
-		DataNodeInfoRepository.getInstance();
-		System.out.println("Loading MetaData Repository...");
-		MetaDataRepository.getInstance();
-		
-		System.out.println("NameNode:");
+        System.out.println("Loading user Reopsitory...");
+        UserDataRepository.getInstance();
+        System.out.println("Loading group Reopsitory...");
+        GroupDataRepository.getInstance();
+        System.out.println("Loading DataNode Repository.. .");
+        DataNodeInfoRepository.getInstance();
+        System.out.println("Loading MetaData Repository...");
+        MetaDataRepository.getInstance();
+
+
+
+        UserDataRepository.getInstance().add("raz", "qwerty");
+        UserDataRepository.getInstance().add("test1", "test1");
+        UserDataRepository.getInstance().add("test2", "test2");
+
+        System.out.println("NameNode:");
+
         try {
-
-
-            if(Config.getInt("noSSL") == 1){
+            if(Config.getInt("unsecured") == 1){
                 ServerSocket serverSocket = new ServerSocket(Config.getInt("port"));
                 new Thread(new ConnectionListener(serverSocket)).start();
             }
 
-            if(Config.getInt("SSL") == 1){
-                SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-                SSLServerSocket sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Config.getInt("SSLport"));
-                new Thread(new ConnectionListener(sslServerSocket)).start();
+            if(Config.getInt("Encrypted") == 1){
+
+                ServerSocket serverSocket = new EServerSocket(Config.getInt("port")+10);
+                new Thread(new ConnectionListener(serverSocket)).start();
             }
 
-
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
 	}
 }

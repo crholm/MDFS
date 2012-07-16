@@ -2,7 +2,8 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-DROP  TABLE IF EXISTS `user-data`, `meta-data_data-node`, `data-node`, `meta-data`;
+DROP  TABLE IF EXISTS `user-data_group-data`, `meta-data_data-node`;
+DROP  TABLE IF EXISTS `user-data`, `data-node`, `meta-data`;
 
 -- Table structure for table `data-node`
 --
@@ -47,9 +48,8 @@ CREATE TABLE IF NOT EXISTS `meta-data` (
   `created` int(11) DEFAULT NULL,
   `lastEdited` int(11) DEFAULT NULL,
   `lastTouched` int(11) DEFAULT NULL,
-  PRIMARY KEY (`filePath`),
-  KEY `owner` (`owner`),
-  KEY `group` (`group`)
+  PRIMARY KEY (`filePath`)
+ 
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -81,23 +81,24 @@ CREATE TABLE IF NOT EXISTS `user-data` (
 
 
 
---
--- Constraints for table `meta-data`
---
-ALTER TABLE `meta-data`
-  ADD CONSTRAINT `meta@002ddata_ibfk_2` FOREIGN KEY (`group`) REFERENCES `group-date` (`gid`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `meta@002ddata_ibfk_1` FOREIGN KEY (`owner`) REFERENCES `user-data` (`uid`) ON DELETE NO ACTION ON UPDATE CASCADE;
+CREATE TABLE IF NOT EXISTS `user-data_group-data` (
+  `uid` int(11) NOT NULL,
+  `gid` int(11) NOT NULL,
+  PRIMARY KEY (`uid`,`gid`),
+  KEY `gid` (`gid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
 
 --
 -- Constraints for table `meta-data_data-node`
 --
-ALTER TABLE `meta-data_data-node`
-  ADD CONSTRAINT `meta@002ddata_data@002dnode_ibfk_2` FOREIGN KEY (`Data_Node_Name`) REFERENCES `data-node` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `meta@002ddata_data@002dnode_ibfk_1` FOREIGN KEY (`Meta_Data_filePath`) REFERENCES `meta-data` (`filePath`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `meta-data_data-node` ADD FOREIGN KEY (`Data_Node_Name`) REFERENCES `data-node` (`name`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `meta-data_data-node` ADD FOREIGN KEY (`Meta_Data_filePath`) REFERENCES `meta-data` (`filePath`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `user-data_group-data`
 --
-ALTER TABLE `user-data_group-data`
-  ADD CONSTRAINT `user@002ddata_group@002ddata_ibfk_2` FOREIGN KEY (`gid`) REFERENCES `group-date` (`gid`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `user@002ddata_group@002ddata_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `user-data` (`uid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE  `user-data_group-data` ADD FOREIGN KEY (  `uid` ) REFERENCES  `user-data` (`uid`) ON DELETE CASCADE ON UPDATE CASCADE ;
+ALTER TABLE  `user-data_group-data` ADD FOREIGN KEY (  `gid` ) REFERENCES  `group-data` (`gid`) ON DELETE CASCADE ON UPDATE CASCADE ;
+
+

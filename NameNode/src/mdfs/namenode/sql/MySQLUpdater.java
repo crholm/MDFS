@@ -487,8 +487,11 @@ public class MySQLUpdater implements Runnable{
         sqlTokenPattern = Pattern.compile('(' + patternStr + ')');
     }
 
+    private static String escape(String s){
+        return s;
+    }
 
-    private static String escape(String s)
+    private static String escape3(String s)
     {
         Matcher matcher = sqlTokenPattern.matcher(s);
         StringBuffer sb = new StringBuffer();
