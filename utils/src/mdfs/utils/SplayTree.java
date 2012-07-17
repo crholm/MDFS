@@ -45,6 +45,7 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 
 	private BinaryNode root;
 	private final BinaryNode aux;
+    private int size = 0;
 
 	/**
 	 * Build an empty Splay Tree
@@ -72,6 +73,7 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 	public boolean insert(Key key, E element) {
 		if (root == null) {
 			root = new BinaryNode(key, element);
+            size++;
 			return true;
 		}
 		splay(key);
@@ -92,6 +94,7 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 			root.right = null;
 		}
 		root = n;
+        size++;
 		return true;
 	}
 	/**
@@ -126,6 +129,7 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 			splay(key);
 			root.right = x;
 		}
+        size--;
 		return node;
 	}
 	
@@ -202,6 +206,9 @@ public class SplayTree<Key extends Comparable<Key>, E> implements Iterable<E> {
 		return root == null;
 	}
 
+    public int size(){
+        return size;
+    }
 	/* (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */

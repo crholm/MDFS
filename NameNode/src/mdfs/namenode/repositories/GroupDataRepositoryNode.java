@@ -1,6 +1,7 @@
 package mdfs.namenode.repositories;
 
 import mdfs.namenode.sql.MySQLUpdater;
+import mdfs.utils.io.protocol.MDFSProtocolUserGroup;
 
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
@@ -12,24 +13,19 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Rasmus Holm
  * @version 1.0
  */
-public class GroupDataRepositoryNode {
-    private int gid;
-    private String name;
+public class GroupDataRepositoryNode extends MDFSProtocolUserGroup{
+    //TODO, same list occores in super class, Implement it with casting?
     private LinkedList<UserDataRepositoryNode> users = new LinkedList<UserDataRepositoryNode>();
     private ReentrantLock lock = new ReentrantLock(true);
 
     public GroupDataRepositoryNode(int gid, String name){
-        this.gid = gid;
-        this.name = name;
-    }
-
-    public int getGid() {
-        return gid;
+        super.setGid(gid);
+        super.setGroup(name);
     }
 
 
     public String getName() {
-        return name;
+        return super.getGroup();
     }
 
     public boolean addUser(UserDataRepositoryNode node){
@@ -83,6 +79,19 @@ public class GroupDataRepositoryNode {
         }
 
     }
+
+    public UserDataRepositoryNode[] getGroupMembers(){
+        lock.lock();
+        try{
+            int size = users.size();
+            UserDataRepositoryNode nodes[] = new UserDataRepositoryNode[size];
+            nodes = users.toArray(nodes);
+            return nodes;
+        }finally {
+            lock.unlock();
+        }
+    }
+
 
     public void commit(){
         MySQLUpdater.getInstance().update(this);

@@ -158,6 +158,38 @@ public class GroupDataRepository {
         }
     }
 
+    public boolean contains(int gid){
+        lock.lock();
+        try{
+            return repositoryGid.contains(gid);
+        }finally {
+            lock.unlock();
+        }
+    }
+    public boolean contains(String group){
+        lock.lock();
+        try{
+            return repository.contains(group);
+        }finally {
+            lock.unlock();
+        }
+    }
+
+    public GroupDataRepositoryNode[] toArray(){
+        lock.lock();
+        try{
+            GroupDataRepositoryNode[] nodes = new GroupDataRepositoryNode[repository.size()];
+            int i = 0;
+            for(GroupDataRepositoryNode node : repository){
+                nodes[i++] = node;
+            }
+            return nodes;
+        }finally {
+            lock.unlock();
+        }
+
+    }
+
 
     public void load(){
         lock.lock();

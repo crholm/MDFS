@@ -31,6 +31,7 @@ public class MDFSProtocolHeader extends MDFSProtocol {
 
     private MDFSProtocolMetaData metadata;
     private MDFSProtocolInfo info;
+    private MDFSProtocolUserGroup usergroup;
 
 
     public static MDFSProtocolHeader createErrorHeader(Stage stage, Type type, Mode mode, String error){
@@ -69,6 +70,9 @@ public class MDFSProtocolHeader extends MDFSProtocol {
 
             if(jsonObject.has("Meta-data"))
                 setMetadata(new MDFSProtocolMetaData(jsonObject.optJSONObject("Meta-data")));
+
+            if(jsonObject.has("User-group"))
+                setUserGroup(new MDFSProtocolUserGroup(jsonObject.optJSONObject("User-group")));
 
             if(jsonObject.has("Info"))
                 setInfo(new MDFSProtocolInfo(jsonObject.optJSONObject("Info")));
@@ -115,6 +119,9 @@ public class MDFSProtocolHeader extends MDFSProtocol {
 
             if(getMetadata() != null)
                 json.put("Meta-data", getMetadata().toJSON());
+
+            if(getUserGroup() != null)
+                json.put("User-group", getUserGroup().toJSON());
 
             if(getInfo() != null)
                 json.put("Info", getInfo().toJSON());
@@ -237,5 +244,11 @@ public class MDFSProtocolHeader extends MDFSProtocol {
     public void setInfo(MDFSProtocolInfo info) {
         this.info = info;
     }
+    public MDFSProtocolUserGroup getUserGroup() {
+        return usergroup;
+    }
 
+    public void setUserGroup(MDFSProtocolUserGroup usergroup) {
+        this.usergroup = usergroup;
+    }
 }
