@@ -28,6 +28,7 @@ public class Replicator implements Runnable{
 	String hosts[];
 	MDFSProtocolMetaData metadata;
 	String filePath;
+    String logicalPath;
     String fileName;
 	
 	/**
@@ -45,6 +46,7 @@ public class Replicator implements Runnable{
         //Retrieves the full path on the local FS of the file to be replicated
         fileName = location.getName();
         filePath = new FileNameOperations().translateFileNameToFullPath(fileName);
+
 
         //An array containing all hosts the file
         int size = location.getHostsSize();
@@ -131,7 +133,7 @@ public class Replicator implements Runnable{
 			//Loops through and send the file to each data node the file is to be replicated to
 			for(int i = 0; i < hosts.length; i++){
                 header.setInfo(new MDFSProtocolInfo());
-                header.getInfo().addToken(fileName, Mode.CASCADE, Config.getString("Token.key"));
+                header.getInfo().addToken(metadata.getPath(), fileName, Mode.CASCADE, Config.getString("Token.key"));
 
 				//Splitt the address into host[0] = address, host[1] = port
 

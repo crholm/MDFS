@@ -33,6 +33,7 @@ public class MDFSFileInputStream extends InputStream {
     private long readBytes = 0;
 
 
+
     public MDFSFileInputStream(MDFSFile file) throws IOException {
         this.file = file;
 

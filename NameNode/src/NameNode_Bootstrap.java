@@ -24,7 +24,12 @@ public class NameNode_Bootstrap {
 		DataNodeInfoRepository.getInstance();
 		System.out.println("Loading MetaData Repository...");
 		MetaDataRepository.getInstance();
-		
+
+        System.out.println("Loading default data...");
+        DefaultData.load();
+
+
+
 		System.out.println("NameNode:");
 
         try {

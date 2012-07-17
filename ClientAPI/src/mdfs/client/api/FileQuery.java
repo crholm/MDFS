@@ -119,12 +119,13 @@ public interface FileQuery {
 	
 	/**
 	 * Changes permissions on a file in the MDFS file system
-	 * @param targetPath - the relative or absolute path to target file or dir
-	 * @param octalPermission - new permission code
-	 * @param flag
-	 * @return true if successful, false otherwise
+	 *
+     * @param targetPath - the relative or absolute path to target file or dir
+     * @param octalPermission - new permission code
+     * @param flag
+     * @return true if successful, false otherwise
 	 */
-	public boolean chmod(String targetPath, short octalPermission, String flag );
+	public boolean chmod(String targetPath, int octalPermission, String flag );
 	
 	/**
 	 * Changes the owner of a file in the MDFS file system

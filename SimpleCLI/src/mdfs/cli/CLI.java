@@ -21,7 +21,7 @@ public class CLI {
 		while(true){
 			System.out.print(user + "@MDFS:" + fq.pwd() + "$ " );
 			command = scanner.nextLine();
-			
+			command = command.trim();
 			
 			
 			
@@ -105,7 +105,28 @@ public class CLI {
 				}
 				timerStop();
 				timerPrint();
-			}
+			}else if(command.startsWith("pwd")){
+                System.out.println(fq.pwd());
+            }else if(command.startsWith("chmod")){
+                System.out.println(fq.pwd());
+                command = command.replaceFirst("chmod", "").trim();
+                command = command.replace("     ", " ");
+                command = command.replace("    ", " ");
+                command = command.replace("   ", " ");
+                command = command.replace("  ", " ");
+                String[] parts = command.split(" ");
+                fq.chmod(parts[1], Integer.parseInt(parts[0]), null);
+            }else if(command.startsWith("chown")){
+                System.out.println(fq.pwd());
+                command = command.replaceFirst("chown", "").trim();
+                command = command.replace("     ", " ");
+                command = command.replace("    ", " ");
+                command = command.replace("   ", " ");
+                command = command.replace("  ", " ");
+                String[] parts = command.split(" ");
+                String[] mod = parts[0].split(":");
+                fq.chown(parts[1], mod[0], mod[1], null);
+            }
 		}
 		
 		

@@ -84,5 +84,8 @@ public class GroupDataRepositoryNode {
 
     }
 
+    public void commit(){
+        MySQLUpdater.getInstance().update(this);
+    }
 
 }

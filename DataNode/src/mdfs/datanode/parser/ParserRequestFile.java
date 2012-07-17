@@ -121,7 +121,7 @@ public class ParserRequestFile implements Parser{
         //Retrivse the file name and builds the path to it
         String fileName = location.getName();
 
-        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+        if(!request.getInfo().authToken(metadata.getPath(), fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
             return false;
         }
@@ -191,7 +191,7 @@ public class ParserRequestFile implements Parser{
 
         String fileName = metadata.getLocation().getName();
 
-        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+        if(!request.getInfo().authToken(metadata.getPath(), fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
             return false;
         }
@@ -239,8 +239,9 @@ public class ParserRequestFile implements Parser{
 
         //Figuers out what file to send back
         String fileName = request.getMetadata().getLocation().getName();
+        String logicalPath = request.getMetadata().getPath();
 
-        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+        if(!request.getInfo().authToken(logicalPath ,fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
             return false;
         }
@@ -315,7 +316,7 @@ public class ParserRequestFile implements Parser{
         //Figures out the path to the file in the local file system
         String fileName = metadata.getLocation().getName();
 
-        if(!request.getInfo().authToken(fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+        if(!request.getInfo().authToken(metadata.getPath(), fileName, mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
             return false;
         }

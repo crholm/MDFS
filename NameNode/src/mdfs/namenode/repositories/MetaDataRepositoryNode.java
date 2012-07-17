@@ -183,4 +183,9 @@ public class MetaDataRepositoryNode extends MDFSProtocolMetaData{
 		setChildren(null);
 		return json;
 	}
+
+    public void commit(){
+        setLastTouched(Time.currentTimeMillis());
+        MySQLUpdater.getInstance().update(this);
+    }
 }

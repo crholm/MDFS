@@ -1,5 +1,7 @@
 package mdfs.namenode.repositories;
 
+import mdfs.namenode.sql.MySQLUpdater;
+
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -92,5 +94,8 @@ public class UserDataRepositoryNode {
         }
     }
 
+    public void commit(){
+        MySQLUpdater.getInstance().update(this);
+    }
 
 }

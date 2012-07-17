@@ -74,6 +74,9 @@ public class FSTree<E> {
 	 * Navigates to the node that at path indicate
 	 */
 	private FSTreeNode<E> getNode(String path){
+        if(path.equals(startIndex))
+            return start;
+
 		String[] exploadedPath = parsePath(path);
 		FSTreeNode<E> node = start;
 		String name;

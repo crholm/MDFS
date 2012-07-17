@@ -90,6 +90,8 @@ public class ParserRequestMetaData implements Parser {
                 return parseRead();
             case REMOVE:
                 return parseRemove();
+            case EDIT:
+                return parseEdit();
             case INFO:
                 return parseInfo();
             default:
@@ -100,12 +102,165 @@ public class ParserRequestMetaData implements Parser {
 
 	}
 
-	/*
-	 * This parser handles when the Mode = Remove, this involves to remove a File or Dir from the
-	 * file system.
-	 * The Filsystem can only remove files and empty dir:s, this making it up to the user to
-	 * make sure the dir is first empty.
-	 */
+    //TODO Implement chown, chmod, chgrp, createdTime, lastedited
+    private boolean parseEdit() {
+        MDFSProtocolMetaData metadata;
+        MetaDataRepository metaDataRepo = MetaDataRepository.getInstance();
+        boolean change = false;
+
+        //Retrieves the Meta-data in the request that the request is regarding
+        metadata = session.getRequest().getMetadata();
+
+        // Checks that all parameters needed are provided
+        if(metadata == null){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data was not included in request"));
+            return false;
+        }else if(metadata.getPath() == null ){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Field Meta-data -> path was not included in request"));
+            return false;
+        }
+
+        //Fetches the full path to the file in MDFS
+        String path = metadata.getPath();
+
+        MetaDataRepositoryNode node = metaDataRepo.get(path);
+
+        if(node == null){
+            //Creates a error response
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " cannot remove " + path +": No such file or directory"));
+            return false;
+        }
+
+        boolean allowWrite = ACL.rwxAllowed(ACLEnum.WRITE, user, node);
+
+        //Sets new times
+        if(metadata.getCreated() != -1 && allowWrite){
+            node.setCreated(metadata.getCreated());
+            change = true;
+        }
+        if(metadata.getLastEdited() != -1 && allowWrite){
+            node.setLastEdited(metadata.getLastEdited());
+            change = true;
+        }
+
+        //Set new permissions
+        if(metadata.getPermission() != -1){
+            if(ACL.chmod(user, node)) {
+                node.setPermission(metadata.getPermission());
+                change = true;
+            }else{
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " changing permissions of " + path +": Operation not permitted"));
+                if(change)
+                    node.commit();
+                return false;
+            }
+        }
+
+
+        //Changes ownership
+        if((metadata.getOwner() != null || metadata.getUid() != -1) && ( !metadata.getOwner().equals(node.getOwner()) || metadata.getUid() != node.getUid()  ) ){
+            UserDataRepositoryNode owner = null;
+
+            //Finding the new owner, if exist
+            if(metadata.getOwner() != null && metadata.getUid() != -1){
+
+                if(!UserDataRepository.getInstance().getName(metadata.getUid()).equals(metadata.getOwner())){
+                    session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "new owner and uid dose not match"));
+                    if(change)
+                        node.commit();
+                    return false;
+                }else{
+                    owner = UserDataRepository.getInstance().get(metadata.getUid());
+                }
+
+            }else if(metadata.getUid() == -1){
+                owner = UserDataRepository.getInstance().get(metadata.getOwner());
+            }else if(metadata.getOwner() == null){
+                owner = UserDataRepository.getInstance().get(metadata.getUid());
+            }
+
+            if(owner == null){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "new owner dose not exist"));
+                if(change)
+                    node.commit();
+                return false;
+            }
+
+            //Checks if it is a new owner
+            if(owner.getUid() != node.getUid()){
+                if(!ACL.chown(user)){
+                    session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " changing ownership of " + path +": Operation not permitted"));
+                    if(change)
+                        node.commit();
+                    return false;
+                }
+                node.setUid(owner.getUid());
+                node.setOwner(owner.getName());
+                change = true;
+            }
+        }
+
+        //Changing group of a file
+        if((metadata.getGroup() != null || metadata.getGid() != -1) && ( !metadata.getGroup().equals(node.getGroup()) || metadata.getGid() != node.getGid()  ) ){
+            GroupDataRepositoryNode group = null;
+
+            if(metadata.getGroup() != null && metadata.getGid() != -1){
+                if(!GroupDataRepository.getInstance().getName(metadata.getGid()).equals(metadata.getOwner())){
+                    session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "new group and gid dose not match"));
+                    if(change)
+                        node.commit();
+                    return false;
+                }else{
+                    group = GroupDataRepository.getInstance().get(metadata.getGid());
+                }
+
+            }else if(metadata.getGid() == -1){
+                group = GroupDataRepository.getInstance().get(metadata.getGroup());
+            }else if(metadata.getGroup() == null){
+                group = GroupDataRepository.getInstance().get(metadata.getGid());
+            }
+
+            if(group == null){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "new group dose not exist"));
+                if(change)
+                    node.commit();
+                return false;
+            }
+
+            if(group.getGid() != node.getGid()){
+                 if(!ACL.chgrp(user, node, group)){
+                    session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, " changing ownership of " + path +": Operation not permitted"));
+                     if(change)
+                         node.commit();
+                    return false;
+                }
+                node.setGid(group.getGid());
+                node.setGroup(group.getName());
+                change = true;
+            }
+
+
+        }
+
+
+        if(change)
+            node.commit();
+
+        MDFSProtocolHeader response = createHeader(Stage.RESPONSE, Type.METADATA, mode);
+        response.setMetadata(node);
+
+        session.setResponse(response);
+
+
+        return true;
+    }
+
+    /*
+      * This parser handles when the Mode = Remove, this involves to remove a File or Dir from the
+      * file system.
+      * The Filsystem can only remove files and empty dir:s, this making it up to the user to
+      * make sure the dir is first empty.
+      */
 	private boolean parseRemove() {
 		MDFSProtocolMetaData metadata;
 		MetaDataRepository metaDataRepo = MetaDataRepository.getInstance();
@@ -139,7 +294,7 @@ public class ParserRequestMetaData implements Parser {
         }
 
         //Checks so that user are allowed to remove file or dir
-        if(!new ACL().operationAllowed(ACLEnum.WRITE, user, node)){
+        if(!ACL.rwxAllowed(ACLEnum.WRITE, user, node)){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
             return false;
         }
@@ -215,8 +370,8 @@ public class ParserRequestMetaData implements Parser {
         }
 
         //Checks so that user are allowed to remove file or dir
-        if(!new ACL().operationAllowed(ACLEnum.READ, user, node)){
-            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+        if(!ACL.rwxAllowed(ACLEnum.READ, user, node)){
+            session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation, reading, not permitted"));
             return false;
         }
 
@@ -231,8 +386,8 @@ public class ParserRequestMetaData implements Parser {
         if(node.getFileType() == MetadataType.DIR){
 
             //Checks so that user are allowed to open dir file or dir
-            if(!new ACL().operationAllowed(ACLEnum.EXECUTE, user, node)){
-                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
+            if(!ACL.rwxAllowed(ACLEnum.EXECUTE, user, node)){
+                session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation, executing, not permitted"));
                 return false;
             }
 
@@ -245,13 +400,19 @@ public class ParserRequestMetaData implements Parser {
                 }
             }
 
+            node.setLastTouched(Time.currentTimeMillis());
+            node.commit();
+
             session.setResponse(response);
             return true;
 
         //If node is a file, a the metadata and location of it is set as a response
         }else if(node.getFileType() == MetadataType.FILE){
 
-            response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
+            response.getInfo().addToken(node.getFilePath(), node.getStorageName(), mode, Config.getString("Token.key"));
+            node.setLastTouched(Time.currentTimeMillis());
+            node.commit();
+
             session.setResponse(response);
             return true;
 
@@ -311,12 +472,12 @@ public class ParserRequestMetaData implements Parser {
             }
 
             //Checks so that user are allowed to open parent dir
-            if(!new ACL().operationAllowed(ACLEnum.EXECUTE, user, parent)){
+            if(!ACL.rwxAllowed(ACLEnum.EXECUTE, user, parent)){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Parent directory could not be opened"));
                 return false;
             }
             //Checks so that user are allowed to write new file to parent dir
-            if(!new ACL().operationAllowed(ACLEnum.WRITE, user, parent)){
+            if(!ACL.rwxAllowed(ACLEnum.WRITE, user, parent)){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
                 return false;
             }
@@ -403,7 +564,7 @@ public class ParserRequestMetaData implements Parser {
         }else{
 
             //Checks so that user are allowed to write to existing file
-            if(!new ACL().operationAllowed(ACLEnum.WRITE, user, node)){
+            if(!ACL.rwxAllowed(ACLEnum.WRITE, user, node)){
                 session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.METADATA, mode, "Operation not permitted"));
                 return false;
             }
@@ -419,6 +580,7 @@ public class ParserRequestMetaData implements Parser {
 
             node.setLastTouched(Time.currentTimeMillis());
 
+            node.commit();
 
         }
 
@@ -427,7 +589,7 @@ public class ParserRequestMetaData implements Parser {
         response.setMetadata(node);
 
         if(node.getType() == MetadataType.FILE)
-            response.getInfo().addToken(node.getStorageName(), mode, Config.getString("Token.key"));
+            response.getInfo().addToken(node.getFilePath(), node.getStorageName(), mode, Config.getString("Token.key"));
 
         session.setResponse(response);
 

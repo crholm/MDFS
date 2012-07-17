@@ -312,17 +312,24 @@ public class MDFSProtocolInfo extends MDFSProtocol {
     }
 
 
-    public void addToken(String filename, Mode mode, String tokenKey){
+    public void addToken(String filepath, String filename, Mode mode, String tokenKey){
+
 
         long tokenGenTime = Time.currentTimeMillis();
 
         this.setToken(
-                genToken( tokenGenTime + mode.toString() + filename, tokenKey) );
+                genToken( tokenGenTime + mode.toString() + filepath + filename, tokenKey) );
 
         this.setTokenGenTime(tokenGenTime);
+        this.setPath(filepath);
+        this.setName(filename);
     }
 
-    public boolean authToken(String filename, Mode mode, String tokenKey, long timeWindow){
+    public boolean authToken(Mode mode, String tokenKey, long timeWindow){
+        return authToken(getPath(), getName(), mode, tokenKey, timeWindow);
+    }
+
+    public boolean authToken(String filepath, String filename, Mode mode, String tokenKey, long timeWindow){
         if(getToken() == null)
             return false;
 
@@ -332,7 +339,7 @@ public class MDFSProtocolInfo extends MDFSProtocol {
         if(getTokenGenTime()+timeWindow < Time.currentTimeMillis())
             return false;
 
-        String token =  genToken(getTokenGenTime() + mode.toString() + filename, tokenKey);
+        String token =  genToken(getTokenGenTime() + mode.toString() + filepath + filename, tokenKey);
 
         if(getToken().equals(token))
             return true;

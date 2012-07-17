@@ -17,6 +17,9 @@ public class FileNameOperations {
 	 * @return the path escaped
 	 */
 	public String escapePath(String path){
+        if(path.equals("/"))
+            return path;
+
 		String[] splitPath = path.split("/");
 		String newPath = "";
 		
@@ -59,7 +62,11 @@ public class FileNameOperations {
 	 * @return the path escaped
 	 */
 	public String escapePath(String path, String currentPath, String user){
-		String newPath;
+        if(path.equals("/"))
+            return path;
+
+        String newPath;
+
 		if(path.charAt(0) == '/'){
 			newPath = path;
 		}else if(path.charAt(0) == '~'){

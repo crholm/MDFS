@@ -65,7 +65,12 @@ public class UserDataRepository {
 		try{
 			//Makes sure the user dose not exist
 			if(!repository.containsKey(node.getName()) && !repositoryUid.containsKey(node.getUid()) ){
-				
+
+                //Creating home group and adding user to it.
+                GroupDataRepositoryNode group = GroupDataRepository.getInstance().add(node.getUid(), node.getName());
+                if(group == null)
+                    return false;
+
 				//Adds user to repo
 				repository.put(node.getName(), node);
                 repositoryUid.put(node.getUid(), node);
@@ -73,9 +78,7 @@ public class UserDataRepository {
                 //Writes the new user to permanent storage
                 MySQLUpdater.getInstance().update(node);
 
-                //Creating home group and adding user to it.
-                GroupDataRepositoryNode group = GroupDataRepository.getInstance().add(node.getUid(), node.getName());
-                //TODO fix if group is null;
+                //Adds the user to group
                 group.addUser(node);
 
 
@@ -94,6 +97,7 @@ public class UserDataRepository {
                 homeDir.setPermission(775);
                 homeDir.setUid(node.getUid());
                 homeDir.setGid(node.getUid());
+                homeDir.setSize(0);
 
 
 				
@@ -123,7 +127,7 @@ public class UserDataRepository {
         lock.lock();
         boolean result = false;
         try{
-            //TODO Save user counter.
+
             UserDataRepositoryNode node = new UserDataRepositoryNode(uidCounter++, name);
 
             node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));

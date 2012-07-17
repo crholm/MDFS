@@ -62,7 +62,7 @@ public class ParserInfoFile implements Parser {
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "path, host, port and/or overwrite dose not exist in Info field"));
             return false;
         }
-        if(!info.authToken(info.getName(), mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
+        if(!info.authToken(info.getPath(), info.getName(), mode, Config.getString("Token.key"), Config.getInt("Token.window"))){
             session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.FILE, mode, "Token failed to authenticate"));
             return false;
 

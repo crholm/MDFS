@@ -24,6 +24,7 @@ public class DataNodeQuerier implements Runnable{
 	private MDFSProtocolHeader query;
 	private DataNodeInfoRepositoryNode[] dataNodes = null;
     private String fileName;
+    private String filePath;
 	
 	/**
 	 * This method will remove all raw data that are deposited on the diffrent datanodes from them.
@@ -42,7 +43,7 @@ public class DataNodeQuerier implements Runnable{
 
         query.setMetadata(node);
         fileName = node.getStorageName();
-
+        filePath = node.getFilePath();
 		//Starts the thread that will send the query
 		new Thread(this).start();
 	}
@@ -56,7 +57,7 @@ public class DataNodeQuerier implements Runnable{
 		//Loops all the nodes
 		for (DataNodeInfoRepositoryNode node : dataNodes) {
             query.setInfo(new MDFSProtocolInfo());
-            query.getInfo().addToken(fileName, query.getMode(), Config.getString("Token.key"));
+            query.getInfo().addToken(filePath, fileName, query.getMode(), Config.getString("Token.key"));
 
             //Creates a socket to one datanode
             dataNodeSocket = socketFactory.createSocket(node.getAddress(), Integer.parseInt(node.getPort()));

@@ -1,4 +1,7 @@
 package mdfs.namenode.repositories;
+
+import mdfs.namenode.sql.MySQLUpdater;
+
 /**
  * A node that hold data regarding a DataNode
  * @author Rasmus Holm
@@ -51,5 +54,9 @@ public class DataNodeInfoRepositoryNode{
 	public void setAddress(String address) {
 		this.address = address;
 	}
+
+    public void commit(){
+        MySQLUpdater.getInstance().update(this);
+    }
 
 }

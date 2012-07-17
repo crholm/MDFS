@@ -27,6 +27,10 @@ public class ParserFactory {
 				return new ParserRequestMetaData(mode);
 			}else if(type == Type.INFO){
                 return new ParserRequestInfo(mode);
+            }else if(type == Type.USER){
+                return new ParserRequestUser(mode);
+            }else if(type == Type.GROUP){
+                return new ParserRequestGroup(mode);
             }
 
 		//Returns a parser for Stage = Info

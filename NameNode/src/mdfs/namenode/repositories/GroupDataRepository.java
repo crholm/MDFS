@@ -47,7 +47,7 @@ public class GroupDataRepository {
         try{
             GroupDataRepositoryNode node = add(gidCounter, name);
 
-            //TODO save new counter to sql
+
             if(node != null)
                 gidCounter++;
 

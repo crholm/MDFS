@@ -157,8 +157,7 @@ public class FileQueryImpl implements FileQuery{
 
         //If the response contains an Error the ls operation failed and null is returned
         if(response.getError() != null){
-                System.err.print(request.getMetadata().getPath() + ", " + response.getError());
-                errorMessage = response.getError();
+            setError("ls: " + request.getMetadata().getPath() + ", " + response.getError());
 
             return null;
         }
@@ -216,7 +215,7 @@ public class FileQueryImpl implements FileQuery{
             MDFSProtocolMetaData[] files = ls(path, flag);
 
             if(files == null){
-                errorMessage = " No such file or directory";
+                setError(" No such file or directory");
                 return false;
             }
 
@@ -258,7 +257,7 @@ public class FileQueryImpl implements FileQuery{
 		Socket nameNodeSocket = socketFactory.createSocket( Config.getString("NameNode.address"), 
 															Config.getInt("NameNode.port") );
 		if(nameNodeSocket == null ){
-			errorMessage = "Could not connect to NameNode";
+			setError("Could not connect to NameNode");
 			return false;
 		} 
 		
@@ -272,7 +271,7 @@ public class FileQueryImpl implements FileQuery{
 
         } catch (JSONException e) {
             e.printStackTrace();
-            errorMessage = "Response from NameNode was invalid.";
+            setError("Response from NameNode was invalid.");
             return false;
         }
 
@@ -282,8 +281,7 @@ public class FileQueryImpl implements FileQuery{
 
         //Checks if there is an error in the removal of the file
         if(response.getError() != null){
-            errorMessage = response.getError();
-            System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+            setError("rm: " + request.getMetadata().getPath() + ", " + response.getError());
             return false;
         }
 
@@ -352,8 +350,7 @@ public class FileQueryImpl implements FileQuery{
 				
 				//Exites and returns false if it contains an error
 				if(response.getError() != null){
-					errorMessage = response.getError();
-                    System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+                    setError("get-datanode: " + request.getMetadata().getPath() + ", " + response.getError());
 					return false;
 				}
 					
@@ -368,7 +365,7 @@ public class FileQueryImpl implements FileQuery{
 				e.printStackTrace();
 				return false;
 			} catch (IOException e) {
-				errorMessage = "Could not create socket to DataNode";
+				setError("Could not create socket to DataNode");
 				return false;
 			}
 			
@@ -404,7 +401,8 @@ public class FileQueryImpl implements FileQuery{
 				for (File file : files) {
 					//Recursively adding all children to MDFS
 					if(!put(file, targetPath + "/" + file.getName(), flag)){
-						errorMessage = "Error writing " + file.getAbsolutePath() + " to MDFS";
+                        setError("Error writing " + file.getAbsolutePath() + " to MDFS");
+
 						//System.out.println(errorMessage);
 						noError = false;
 					}
@@ -470,8 +468,7 @@ public class FileQueryImpl implements FileQuery{
 
             //Returns false if there was a error from the name node
             if(response.getError() != null){
-                errorMessage = response.getError();
-                System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+                setError("put-namenode: " + request.getMetadata().getPath() + ", " + response.getError());
                 return false;
 
             //If file already exists, it connects to DataNode for overwriting
@@ -515,9 +512,8 @@ public class FileQueryImpl implements FileQuery{
             try {
                 MDFSProtocolHeader response2 = new MDFSProtocolHeader(socketFunctions.receiveText(dataNodeSocket));
                 dataNodeSocket.close();
-                if(request2.getError() != null){
-                    errorMessage = request2.getError();
-                    System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+                if(response2.getError() != null){
+                    setError("put-datanode: " + request.getMetadata().getPath() + ", " + response2.getError());
                     return false;
                 }
             } catch (JSONException e) {
@@ -544,17 +540,102 @@ public class FileQueryImpl implements FileQuery{
 	}
 
 	@Override
-	public boolean chmod(String targetPath, short octalPermission, String flag) {
-		targetPath = fileNameOperations.escapePath(targetPath);
-		// TODO Implement chmod
-		return false;
+	public boolean chmod(String targetPath, int octalPermission, String flag) {
+		targetPath = fileNameOperations.escapePath(targetPath, pwd(), user);
+
+        Socket nameNodeSocket = socketFactory.createSocket( Config.getString("NameNode.address"),
+                Config.getInt("NameNode.port") );
+
+        //Creates a request to the name node
+        MDFSProtocolHeader request = new MDFSProtocolHeader();
+        MDFSProtocolMetaData metadata = new MDFSProtocolMetaData();
+
+        request.setStage(Stage.REQUEST);
+        request.setType(Type.METADATA);
+        request.setMode(Mode.EDIT);
+        request.setUser(this.user);
+        request.setPass(this.pass);
+
+        metadata.setPath(targetPath);
+        metadata.setPermission(octalPermission);
+
+        request.setMetadata(metadata);
+
+        socketFunctions.sendText(nameNodeSocket, request.toString());
+
+        //Receives the response from the name node
+        MDFSProtocolHeader response = null;
+        try {
+            response = new MDFSProtocolHeader(socketFunctions.receiveText(nameNodeSocket));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+            nameNodeSocket.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
+
+        if(response.getError() != null){
+            setError("chmod " + request.getMetadata().getPath() + ", " + response.getError());
+            return false;
+        }else{
+            return true;
+        }
 	}
 
 	@Override
 	public boolean chown(String targetPath, String owner, String group, String flag) {
-		targetPath = fileNameOperations.escapePath(targetPath);
-		// TODO Implement chown
-		return false;
+		targetPath = fileNameOperations.escapePath(targetPath, pwd(), user);
+
+        Socket nameNodeSocket = socketFactory.createSocket( Config.getString("NameNode.address"),
+                Config.getInt("NameNode.port") );
+
+        //Creates a request to the name node
+        MDFSProtocolHeader request = new MDFSProtocolHeader();
+        MDFSProtocolMetaData metadata = new MDFSProtocolMetaData();
+
+        request.setStage(Stage.REQUEST);
+        request.setType(Type.METADATA);
+        request.setMode(Mode.EDIT);
+        request.setUser(this.user);
+        request.setPass(this.pass);
+
+        metadata.setPath(targetPath);
+        metadata.setOwner(owner);
+        metadata.setGroup(group);
+
+        request.setMetadata(metadata);
+
+        socketFunctions.sendText(nameNodeSocket, request.toString());
+
+        //Receives the response from the name node
+        MDFSProtocolHeader response = null;
+        try {
+            response = new MDFSProtocolHeader(socketFunctions.receiveText(nameNodeSocket));
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+            nameNodeSocket.close();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
+
+        if(response.getError() != null){
+            setError("chown " + request.getMetadata().getPath() + ", " + response.getError());
+            return false;
+        }else{
+            return true;
+        }
+
+
 	}
 
 
@@ -623,8 +704,7 @@ public class FileQueryImpl implements FileQuery{
 
 
         if(response.getError() != null){
-            errorMessage = getError();
-            System.err.print(request.getMetadata().getPath() + ", " + response.getError());
+            setError("mkdir " + request.getMetadata().getPath() + ", " + response.getError());
             return false;
         }else{
             return true;
@@ -636,5 +716,9 @@ public class FileQueryImpl implements FileQuery{
 	public String getError() {
 		return errorMessage;
 	}
+    public void setError(String msg) {
+        errorMessage = msg;
+        System.err.println(msg);
+    }
 
 }

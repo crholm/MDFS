@@ -199,7 +199,7 @@ public class MDFSFile {
         metadata.setPath(path);
         metadata.setType(MetadataType.FILE);
         metadata.setSize(-1);
-        metadata.setPermission(640);
+
         metadata.setOwner(user);
         metadata.setGroup(user);
         metadata.setCreated(Time.currentTimeMillis());
@@ -473,7 +473,6 @@ public class MDFSFile {
         metadata.setPath(path);
         metadata.setType(MetadataType.DIR);
         metadata.setSize(0);
-        metadata.setPermission(750);
         metadata.setOwner(user);
         metadata.setGroup(user);
 

@@ -267,13 +267,17 @@ public class MetaDataRepository {
 		lock.lock();
 		try{
             //TODO fix gorup implementation and all.
+            //TODO fix proper implemntation of root dir, group and sudo groups.
 			MetaDataRepositoryNode deafualtNode = new MetaDataRepositoryNode();
 			deafualtNode.setOwner("root");
 			deafualtNode.setGroup("root");
+            deafualtNode.setGid(0);
+            deafualtNode.setUid(0);
 			deafualtNode.setFileType(MetadataType.DIR);
 			deafualtNode.setFilePath("/");
-			deafualtNode.setPermission((short)000);
+			deafualtNode.setPermission((short)775);
 			deafualtNode.setSize(0);
+
 			repository = new FSTree<MetaDataRepositoryNode>("/", "/", deafualtNode);
 		}finally{
 			lock.unlock();
