@@ -82,12 +82,9 @@ public class ParserRequestGroup implements Parser {
         MDFSProtocolHeader response = createHeader();
         response.setUserGroup(new MDFSProtocolUserGroup());
 
-        //TODO fix the loop problem that appers if group is parseRead before.
         GroupDataRepositoryNode[] groups = GroupDataRepository.getInstance().toArray();
         for(GroupDataRepositoryNode group : groups)
             response.getUserGroup().addMember(group);
-
-        response.getInfo().setRemoved(EventStatus.SUCCESSFUL);
 
         session.setResponse(response);
         return true;
@@ -100,9 +97,128 @@ public class ParserRequestGroup implements Parser {
             this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Only su may edit a group on the system."));
             return false;
         }
+        if(metagroup == null){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Field User-group was not provided"));
+            return false;
+        }
+        if(metagroup.getAction() == null){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "the field User-group -> action was not set"));
+            return false;
+        }
+        if(metagroup.getAction() != Mode.ADD && metagroup.getAction() != Mode.REMOVE){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "the field User-group -> action was not a valid value"));
+            return false;
+        }
+
+        int uid = metagroup.getUid();
+        String username = metagroup.getUser();
+        int gid = metagroup.getGid();
+        String groupname = metagroup.getGroup();
+
+        //Checks that all requeried values were in request
+        if((uid == -1 && username == null) || (gid == -1 && groupname == null)){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "A group and user was not provided"));
+                return false;
+        }
 
 
-        return false;  //To change body of created methods use File | Settings | File Templates.
+        //Checking so that user exists and uid and user match if provided.
+        UserDataRepositoryNode usernode;
+        if((uid != -1 && username != null)){
+            usernode =  UserDataRepository.getInstance().get(uid);
+            if(usernode == null){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "User dose not exist"));
+                return false;
+            }
+            if(!usernode.getName().equals(username)){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Username and uid dose not match"));
+                return false;
+            }
+
+
+        }else if(uid != -1){
+            usernode =  UserDataRepository.getInstance().get(uid);
+
+        }else{
+            usernode =  UserDataRepository.getInstance().get(username);
+
+        }
+
+        if(usernode == null){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "User dose not exist"));
+            return false;
+        }
+
+
+
+        //Checking that group exist and that gid and groupname match
+        GroupDataRepositoryNode groupnode;
+        if((gid != -1 && groupname != null)){
+            groupnode =  GroupDataRepository.getInstance().get(gid);
+            if(groupnode == null){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Group dose not exist"));
+                return false;
+            }
+            if(!groupnode.getName().equals(groupname)){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Group and gid dose not match"));
+                return false;
+            }
+
+
+        }else if(gid != -1){
+            groupnode =  GroupDataRepository.getInstance().get(uid);
+
+        }else{
+            groupnode =  GroupDataRepository.getInstance().get(groupname);
+
+        }
+
+        if(groupnode == null){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Group dose not exist"));
+            return false;
+        }
+
+
+        boolean success;
+        MDFSProtocolHeader response = createHeader();
+
+
+        if(metagroup.getAction() == Mode.ADD){
+            if(groupnode.containsUser(usernode)){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Group already contains user"));
+                return false;
+            }
+
+            success = groupnode.addUser(usernode);
+            response.getInfo().setWritten(EventStatus.SUCCESSFUL);
+
+
+        }else if(metagroup.getAction() == Mode.REMOVE){
+            if(!groupnode.containsUser(usernode)){
+                this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Group dose not contains user"));
+                return false;
+            }
+
+            success = groupnode.removeUser(usernode);
+            response.getInfo().setRemoved(EventStatus.SUCCESSFUL);
+
+
+
+        }else{
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "the field User-group -> action was not a valid value"));
+            return false;
+        }
+        if(!success){
+            this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Operation failed"));
+            return false;
+        }
+
+
+        response.setUserGroup(groupnode);
+
+        session.setResponse(response);
+        return true;
+
     }
 
     private boolean parseRemove() {
@@ -216,11 +332,6 @@ public class ParserRequestGroup implements Parser {
 
         MDFSProtocolHeader response = createHeader();
         response.setUserGroup(group);
-
-        //Adding memebers of group to response TODO this list is now duplicated in the object group. (cold give rise to a infinite loop. Group-Member-Group-Member and so on.)
-        UserDataRepositoryNode users[] = group.getGroupMembers();
-        for(UserDataRepositoryNode user : users)
-            response.getUserGroup().addMember(user);
 
         response.getInfo().setWritten(EventStatus.SUCCESSFUL);
 

@@ -3,6 +3,7 @@ package mdfs.utils.crypto.digests;
 import mdfs.utils.crypto.MessageDigest;
 
 import java.math.BigInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Package: mdfs.utils.crypto.engines
@@ -299,11 +300,18 @@ public class SHA1 extends MessageDigest {
         }
     }
 
+    public static ReentrantLock lock = new ReentrantLock(true);
+
     public static String quick(byte msg[]){
+        lock.lock();
+        try{
         SHA1 md = new SHA1();
         byte hash[] = new byte[md.getDigestSize()];
         md.doFinal(msg, hash,0);
         return new BigInteger(1, hash).toString(16);
+        }finally {
+            lock.unlock();
+        }
     }
 
 }

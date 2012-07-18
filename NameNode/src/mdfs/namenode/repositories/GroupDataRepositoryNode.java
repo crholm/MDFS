@@ -15,12 +15,13 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class GroupDataRepositoryNode extends MDFSProtocolUserGroup{
     //TODO, same list occores in super class, Implement it with casting?
-    private LinkedList<UserDataRepositoryNode> users = new LinkedList<UserDataRepositoryNode>();
+    private LinkedList<MDFSProtocolUserGroup> users;
     private ReentrantLock lock = new ReentrantLock(true);
 
     public GroupDataRepositoryNode(int gid, String name){
         super.setGid(gid);
         super.setGroup(name);
+        users = super.getMembers();
     }
 
 
@@ -80,7 +81,7 @@ public class GroupDataRepositoryNode extends MDFSProtocolUserGroup{
 
     }
 
-    public UserDataRepositoryNode[] getGroupMembers(){
+    public UserDataRepositoryNode[] getMembersArray(){
         lock.lock();
         try{
             int size = users.size();

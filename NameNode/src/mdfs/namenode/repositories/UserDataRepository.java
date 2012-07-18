@@ -129,11 +129,9 @@ public class UserDataRepository {
         try{
 
             UserDataRepositoryNode node = new UserDataRepositoryNode(uidCounter++, name);
-
-            node.setPwdHash(SHA1.quick(pass.getBytes("UTF8")));
+            node.setPassword(pass);
             result = add(node);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+
         } finally{
             lock.unlock();
         }
@@ -175,7 +173,7 @@ public class UserDataRepository {
     }
 
     private void removeUserFromGroups(UserDataRepositoryNode user){
-        GroupDataRepositoryNode[] groups = user.getGroupMembership();
+        GroupDataRepositoryNode[] groups = user.getGroupMemberships();
         for(GroupDataRepositoryNode group : groups)
             group.removeUser(user);
     }
@@ -329,6 +327,22 @@ public class UserDataRepository {
             lock.unlock();
         }
 
+    }
+
+    public UserDataRepositoryNode[] toArray() {
+        lock.lock();
+        try{
+            UserDataRepositoryNode[] nodes = new UserDataRepositoryNode[repositoryUid.size()];
+            int i = 0;
+            for(UserDataRepositoryNode node : repositoryUid){
+                nodes[i] = node;
+                i++;
+            }
+            return nodes;
+
+        }finally {
+            lock.unlock();
+        }
     }
 }
 

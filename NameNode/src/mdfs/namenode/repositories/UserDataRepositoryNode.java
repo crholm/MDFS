@@ -1,8 +1,11 @@
 package mdfs.namenode.repositories;
 
 import mdfs.namenode.sql.MySQLUpdater;
+import mdfs.utils.crypto.digests.SHA1;
 import mdfs.utils.io.protocol.MDFSProtocolUserGroup;
 
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class UserDataRepositoryNode extends MDFSProtocolUserGroup {
 	private String pwdHash;
     //TODO, same list occores in super class, Implement it with casting?
-    private LinkedList<GroupDataRepositoryNode> groups = new LinkedList<GroupDataRepositoryNode>();
+    private LinkedList<MDFSProtocolUserGroup> groups;
     private ReentrantLock lock = new ReentrantLock(true);
 
 
@@ -25,6 +28,7 @@ public class UserDataRepositoryNode extends MDFSProtocolUserGroup {
 	public UserDataRepositoryNode(int uid, String name){
 		super.setUser(name);
         super.setUid(uid);
+        groups = super.getMembers();
 	}
 
 
@@ -50,6 +54,19 @@ public class UserDataRepositoryNode extends MDFSProtocolUserGroup {
 	public void setPwdHash(String pwdHash) {
 		this.pwdHash = pwdHash;
 	}
+
+    @Override
+    public void setPassword(String password) {
+        try {
+            SHA1 md = new SHA1();
+            byte hash[] = new byte[md.getDigestSize()];
+            md.doFinal(password.getBytes("UTF8"), hash,0);
+            setPwdHash(new BigInteger(1, hash).toString(16) );
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      *
@@ -78,7 +95,7 @@ public class UserDataRepositoryNode extends MDFSProtocolUserGroup {
         }
     }
 
-    public GroupDataRepositoryNode[] getGroupMembership(){
+    public GroupDataRepositoryNode[] getGroupMemberships(){
         lock.lock();
         try{
             int size = groups.size();

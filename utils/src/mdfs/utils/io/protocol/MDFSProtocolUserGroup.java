@@ -1,5 +1,6 @@
 package mdfs.utils.io.protocol;
 
+import mdfs.utils.io.protocol.enums.Mode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ public class MDFSProtocolUserGroup extends MDFSProtocol {
     private int gid = -1;
     private String group = null;
     private String password = null;
+    private Mode action = null;
 
     private LinkedList<MDFSProtocolUserGroup> members;
 
@@ -33,6 +35,7 @@ public class MDFSProtocolUserGroup extends MDFSProtocol {
             setUser(json.optString("user", null));
             setGid(json.optInt("gid", -1));
             setGroup(json.optString("group", null));
+            setAction(json.optString("action", null));
 
             if(json.has("Members")){
                 JSONArray array = json.optJSONArray("Members");
@@ -48,7 +51,11 @@ public class MDFSProtocolUserGroup extends MDFSProtocol {
 
 
     @Override
-    public JSONObject toJSON() {
+    public JSONObject toJSON(){
+        return toJSON(true);
+    }
+
+    public JSONObject toJSON(boolean withMembers) {
         JSONObject json = new JSONObject();
 
         try {
@@ -67,36 +74,55 @@ public class MDFSProtocolUserGroup extends MDFSProtocol {
             if(getGroup() != null)
                 json.put("group", getGroup());
 
-            if(getMembers() != null){
+            if(getAction() != null)
+                json.put("action", getAction().toString());
+
+            if(getMembers() != null && withMembers){ //To prevent accidental recursive lookup.
 
                 JSONArray array = new JSONArray();
                 for(MDFSProtocolUserGroup member : getMembers())
-                    array.put(member.toJSON());
+                    array.put(member.toJSON(false));
                 json.put("Members", array);
             }
 
 
         } catch (JSONException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
-        return json;  //To change body of implemented methods use File | Settings | File Templates.
+        return json;
+    }
+
+
+    public Mode getAction() {
+        return action;
+    }
+
+    public void setAction(Mode action) {
+        this.action = action;
+    }
+    public void setAction(String action) {
+
+        try{
+            if(action == null)
+                this.action = null;
+            else
+                this.action = Mode.valueOf(action.toUpperCase().trim());
+        }catch (Exception e){
+            this.action = null;
+        }
     }
 
     public void addMember(MDFSProtocolUserGroup member) {
-        LinkedList<MDFSProtocolUserGroup> members = getMembers();
         if(members == null)
             members = new LinkedList<MDFSProtocolUserGroup>();
         members.add(member);
-        setMembers(members);
     }
     public LinkedList<MDFSProtocolUserGroup> getMembers(){
+        if(members == null)
+            members = new LinkedList<MDFSProtocolUserGroup>();
         return members;
     }
-    public void setMembers(LinkedList<MDFSProtocolUserGroup> members){
-        this.members = members;
-    }
-
 
     public int getUid() {
         return uid;

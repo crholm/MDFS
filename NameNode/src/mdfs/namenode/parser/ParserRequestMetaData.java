@@ -102,7 +102,7 @@ public class ParserRequestMetaData implements Parser {
 
 	}
 
-    //TODO Implement chown, chmod, chgrp, createdTime, lastedited
+
     private boolean parseEdit() {
         MDFSProtocolMetaData metadata;
         MetaDataRepository metaDataRepo = MetaDataRepository.getInstance();
@@ -395,6 +395,7 @@ public class ParserRequestMetaData implements Parser {
             //Fetching all the childern, if any of the dir an building the response
             MetaDataRepositoryNode[] nodes = metaDataRepo.getChildren(filePath);
             if(nodes != null){
+                response.getMetadata().setChildren(null);
                 for (MDFSProtocolMetaData child : nodes) {
                     response.getMetadata().addChild(child);
                 }

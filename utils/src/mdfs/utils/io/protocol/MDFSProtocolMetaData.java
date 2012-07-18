@@ -64,7 +64,12 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
     }
 
     @Override
-    public JSONObject toJSON() {
+    public JSONObject toJSON(){
+        return toJSON(true);
+    }
+
+
+    public JSONObject toJSON(boolean withChildren) {
         JSONObject json = new JSONObject();
 
 
@@ -106,11 +111,11 @@ public class MDFSProtocolMetaData extends MDFSProtocol{
             if(getLocation() != null)
                 json.put("Location", getLocation().toJSON());
 
-            if(getChildren() != null){
+            if(getChildren() != null && withChildren){
 
                 JSONArray array = new JSONArray();
                 for(MDFSProtocolMetaData child : getChildren())
-                    array.put(child.toJSON());
+                    array.put(child.toJSON(false));
                 json.put("Children", array);
             }
 
