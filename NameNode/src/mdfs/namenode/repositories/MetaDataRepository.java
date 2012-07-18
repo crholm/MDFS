@@ -266,8 +266,7 @@ public class MetaDataRepository {
 	public void clear() {
 		lock.lock();
 		try{
-            //TODO fix gorup implementation and all.
-            //TODO fix proper implemntation of root dir, group and sudo groups.
+
 			MetaDataRepositoryNode deafualtNode = new MetaDataRepositoryNode();
 			deafualtNode.setOwner("root");
 			deafualtNode.setGroup("root");

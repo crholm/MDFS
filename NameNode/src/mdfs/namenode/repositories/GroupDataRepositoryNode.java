@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @version 1.0
  */
 public class GroupDataRepositoryNode extends MDFSProtocolUserGroup{
-    //TODO, same list occores in super class, Implement it with casting?
+
     private LinkedList<MDFSProtocolUserGroup> users;
     private ReentrantLock lock = new ReentrantLock(true);
 

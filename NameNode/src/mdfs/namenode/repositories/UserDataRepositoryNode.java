@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class UserDataRepositoryNode extends MDFSProtocolUserGroup {
 	private String pwdHash;
-    //TODO, same list occores in super class, Implement it with casting?
+
     private LinkedList<MDFSProtocolUserGroup> groups;
     private ReentrantLock lock = new ReentrantLock(true);
 

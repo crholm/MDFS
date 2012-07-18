@@ -179,7 +179,7 @@ public class MDFSFile {
     }
 
 
-    //TODO Implement this
+
     public boolean createNewFile(){
         if(exists())
             return false;
@@ -438,7 +438,8 @@ public class MDFSFile {
 
         return false;
     }
-    //TODO change implementation of time to hold the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC.
+
+    //TODO implement this.
     public long lastModified(){
         return 0;
     }

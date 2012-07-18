@@ -20,6 +20,7 @@ import mdfs.utils.parser.Session;
  * @author Rasmus Holm
  *
  */
+//TODO Implement Move operation.
 public class ParserRequestMetaData implements Parser {
 
 	private Mode mode;
@@ -393,6 +394,7 @@ public class ParserRequestMetaData implements Parser {
 
 
             //Fetching all the childern, if any of the dir an building the response
+            //TODO might be nice to implement this in the protocol instead of here.
             MetaDataRepositoryNode[] nodes = metaDataRepo.getChildren(filePath);
             if(nodes != null){
                 response.getMetadata().setChildren(null);

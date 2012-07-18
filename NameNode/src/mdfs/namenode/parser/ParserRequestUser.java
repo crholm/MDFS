@@ -21,6 +21,7 @@ import mdfs.utils.parser.Session;
  * @author Rasmus Holm
  * @version 1.0
  */
+//TODO Implement tests and API
 public class ParserRequestUser implements Parser {
 
     Mode mode;
@@ -79,6 +80,7 @@ public class ParserRequestUser implements Parser {
         }
     }
 
+    //Returns all users
     private boolean parseInfo() {
 
         MDFSProtocolUserGroup users = new MDFSProtocolUserGroup();
@@ -96,6 +98,7 @@ public class ParserRequestUser implements Parser {
         return true;
     }
 
+    //Changes password
     private boolean parseEdit() {
         if(metauser == null){
             this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Field User-group was not provided"));
@@ -154,6 +157,7 @@ public class ParserRequestUser implements Parser {
 
     }
 
+    //Removes user
     private boolean parseRemove() {
 
         if(metauser == null){
@@ -210,6 +214,7 @@ public class ParserRequestUser implements Parser {
 
     }
 
+    //Create/writes new user.
     private boolean parseWrite() {
         if(metauser == null){
             this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Field User-group was not provided"));
@@ -282,6 +287,7 @@ public class ParserRequestUser implements Parser {
 
     }
 
+    //returns all information about user and group memberships.
     private boolean parseRead() {
         if(metauser == null){
             this.session.setResponse(MDFSProtocolHeader.createErrorHeader(Stage.RESPONSE, Type.GROUP, mode, "Field User-group was not provided"));
